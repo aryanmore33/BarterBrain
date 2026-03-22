@@ -1,6 +1,22 @@
 import { Link } from "react-router-dom";
-import { Brain, ArrowRight, Repeat, Users, Coins } from "lucide-react";
+import { Brain, ArrowRight, Repeat, Users, Coins, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useTheme } from "next-themes";
+
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <button
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      aria-label="Toggle theme"
+    >
+      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
 
 export default function LandingPage() {
   return (
@@ -14,6 +30,7 @@ export default function LandingPage() {
           <span className="font-display text-xl font-bold text-foreground">BarterBrain</span>
         </div>
         <div className="flex gap-2">
+          <ThemeToggle />
           <Button variant="ghost" asChild><Link to="/login">Login</Link></Button>
           <Button asChild><Link to="/signup">Get Started</Link></Button>
         </div>
