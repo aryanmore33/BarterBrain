@@ -15,7 +15,7 @@ class RouteMap {
     // Example:
     // openRouter.use("/auth", require("../routes/authRoutes"));
 
-
+// confirm
 
     // 🔐 PROTECTED ROUTES (JWT required)
     app.use(
