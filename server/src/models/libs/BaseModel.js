@@ -58,12 +58,9 @@ class BaseModel {
     /**
      * Common WHERE clause (soft delete support)
      */
-    whereStatement(whereObj = {}) {
-        return {
-            [TABLE_DEFAULTS.COLUMNS.IS_DELETED.KEY]: false,
-            ...whereObj
-        };
-    }
+    whereStatement(data) {
+  return data;
+}
 
     /**
      * Removes undefined values
