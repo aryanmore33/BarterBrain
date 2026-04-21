@@ -18,18 +18,19 @@ class BaseModel {
     /**
      * Adds audit fields during INSERT
      */
-    insertStatement(insertObj) {
-        const userId = this.getUserId();
+insertStatement(insertObj) {
+    const userId = this.getUserId();
 
-        if (!userId) {
-            return insertObj;
-        }
-
-        return {
-            ...insertObj,
-            [TABLE_DEFAULTS.COLUMNS.CREATED_BY.KEY]: userId
-        };
+    // 👇 only add if model allows it
+    if (!userId || !this.hasCreatedBy) {
+        return insertObj;
     }
+
+    return {
+        ...insertObj,
+        [TABLE_DEFAULTS.COLUMNS.CREATED_BY.KEY]: userId
+    };
+}
 
     /**
      * Helper insert for bulk rows

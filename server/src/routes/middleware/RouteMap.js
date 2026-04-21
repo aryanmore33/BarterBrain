@@ -12,7 +12,7 @@ class RouteMap {
     // 🔓 OPEN ROUTES
     app.use("/open/api", openRouter);
     openRouter.use("/auth", require("../routers/authRouter"));
-
+    
     // 🔐 PROTECTED ROUTES
     app.use(
       "/api",
@@ -20,7 +20,8 @@ class RouteMap {
       RouteMap._attachUser,
       Router
     );
-
+    Router.use("/skills", require("../routers/skillRouter"));
+    
     // Example protected route
     Router.get("/me", (req, res) => {
       res.json({
