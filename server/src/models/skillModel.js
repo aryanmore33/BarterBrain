@@ -20,6 +20,13 @@ class SkillModel extends BaseModel {
       .where(this.whereStatement({ name }))
       .first();
   }
+  async findOfferedSkillById(id) {
+  const db = await this.getQueryBuilder();
+
+  return db(this.offeredTable)
+    .where({ id })
+    .first();
+}
 
   async createSkill({ name, category = null }) {
     const db = await this.getQueryBuilder();

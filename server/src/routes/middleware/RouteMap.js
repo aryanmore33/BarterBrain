@@ -21,6 +21,7 @@ class RouteMap {
       Router
     );
     Router.use("/skills", require("../routers/skillRouter"));
+    Router.use("/barter", require("../routers/barterRouter"));
     
     // Example protected route
     Router.get("/me", (req, res) => {
