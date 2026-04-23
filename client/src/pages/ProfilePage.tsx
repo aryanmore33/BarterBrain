@@ -1,14 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit, Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { currentUser } from "@/services/api";
 import { UserAvatar } from "@/components/SharedComponents";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { skillService, type Skill } from "@/services/api";
 
 export default function ProfilePage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [offeredSkills, setOfferedSkills] = useState<Skill[]>([]);
+  const [wantedSkills, setWantedSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const offered: any = await skillService.getMyOffered();
+        const wanted: any = await skillService.getMyWanted();
+        setOfferedSkills(offered.data || []);
+        setWantedSkills(wanted.data || []);
+      } catch (err) {
+        console.error("Failed to fetch skills", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchSkills();
+    }
+  }, [user]);
 
   const reviews = [
     { id: 1, name: "Sarah Chen", rating: 5, text: "Amazing React tutor! Patient and knowledgeable.", date: "Mar 10, 2025" },
@@ -16,20 +40,22 @@ export default function ProfilePage() {
     { id: 3, name: "Priya Patel", rating: 4, text: "Very helpful with TypeScript concepts. Would barter again!", date: "Feb 15, 2025" },
   ];
 
+  if (!user || loading) return <div className="py-20 text-center">Loading profile...</div>;
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-fade-in">
       {/* Profile header */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-card">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-          <UserAvatar name={currentUser.name} className="h-20 w-20 text-2xl" />
+          <UserAvatar name={user.name} className="h-20 w-20 text-2xl" />
           <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold text-foreground">{currentUser.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{currentUser.bio}</p>
+            <h1 className="font-display text-2xl font-bold text-foreground">{user.name}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{user.bio || "No bio yet"}</p>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
               <div className="flex items-center gap-1 text-sm text-warning">
                 <Star className="h-4 w-4 fill-current" />
-                <span className="font-medium">{currentUser.rating}</span>
-                <span className="text-muted-foreground">({currentUser.reviewCount} reviews)</span>
+                <span className="font-medium">5.0</span>
+                <span className="text-muted-foreground">(0 reviews)</span>
               </div>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" /> Remote
@@ -51,7 +77,7 @@ export default function ProfilePage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-card">
           <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Skills I Know</h2>
           <div className="space-y-3">
-            {currentUser.skillsOffered.map((s) => (
+            {offeredSkills.map((s) => (
               <div key={s.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary text-xs font-bold">
                   {s.name.charAt(0)}
@@ -70,7 +96,7 @@ export default function ProfilePage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-card">
           <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Skills I Want to Learn</h2>
           <div className="space-y-3">
-            {currentUser.skillsWanted.map((s) => (
+            {wantedSkills.map((s) => (
               <div key={s.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent text-xs font-bold">
                   {s.name.charAt(0)}

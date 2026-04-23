@@ -12,6 +12,7 @@ class RouteMap {
     // 🔓 OPEN ROUTES
     app.use("/open/api", openRouter);
     openRouter.use("/auth", require("../routers/authRouter"));
+
     
     // 🔐 PROTECTED ROUTES
     app.use(
@@ -22,6 +23,7 @@ class RouteMap {
     );
     Router.use("/skills", require("../routers/skillRouter"));
     Router.use("/barter", require("../routers/barterRouter"));
+    Router.use("/chat", require("../routers/chatRouter"));
     
     // Example protected route
     Router.get("/me", (req, res) => {
@@ -51,8 +53,13 @@ class RouteMap {
     secret: process.env.JWT_SECRET_KEY,
     algorithms: ["HS256"],
     getToken: (req) => {
+      // 1. Check Authorization header
       if (req.headers.authorization?.startsWith("Bearer ")) {
         return req.headers.authorization.split(" ")[1];
+      }
+      // 2. Check cookies
+      if (req.cookies?.token) {
+        return req.cookies.token;
       }
       return null;
     }

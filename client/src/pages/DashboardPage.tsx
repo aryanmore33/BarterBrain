@@ -2,19 +2,49 @@ import { Link } from "react-router-dom";
 import { Plus, Compass, Star, ArrowUpRight, TrendingUp, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { currentUser } from "@/services/api";
 import { UserAvatar } from "@/components/SharedComponents";
+import { useAuth } from "@/context/AuthContext";
+import { skillService, type Skill } from "@/services/api";
+import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const [offeredSkills, setOfferedSkills] = useState<Skill[]>([]);
+  const [wantedSkills, setWantedSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const offered: any = await skillService.getMyOffered();
+        const wanted: any = await skillService.getMyWanted();
+        setOfferedSkills(offered.data || []);
+        setWantedSkills(wanted.data || []);
+      } catch (err) {
+        console.error("Failed to fetch skills", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchSkills();
+    }
+  }, [user]);
+
+  if (!user || loading) {
+    return <div className="py-20 text-center">Loading your dashboard...</div>;
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Welcome */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <UserAvatar name={currentUser.name} className="h-14 w-14 text-lg" />
+          <UserAvatar name={user.name} className="h-14 w-14 text-lg" />
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              Welcome back, {currentUser.name.split(" ")[0]}!
+              Welcome back, {user.name.split(" ")[0]}!
             </h1>
             <p className="text-sm text-muted-foreground">Ready to exchange some skills today?</p>
           </div>
@@ -31,15 +61,15 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard icon={Coins} label="Credits" value={currentUser.credits.toString()} color="primary" />
-        <StatCard icon={Star} label="Rating" value={`${currentUser.rating} / 5`} color="warning" />
-        <StatCard icon={TrendingUp} label="Barters" value={currentUser.reviewCount.toString()} color="success" />
+        <StatCard icon={Coins} label="Credits" value={user.credits.toString()} color="primary" />
+        <StatCard icon={Star} label="Rating" value={`5 / 5`} color="warning" />
+        <StatCard icon={TrendingUp} label="Barters" value={`0`} color="success" />
       </div>
 
       {/* Skills */}
       <div className="grid gap-6 md:grid-cols-2">
-        <SkillSection title="Skills I Offer" skills={currentUser.skillsOffered} variant="offered" />
-        <SkillSection title="Skills I Want" skills={currentUser.skillsWanted} variant="wanted" />
+        <SkillSection title="Skills I Offer" skills={offeredSkills} variant="offered" />
+        <SkillSection title="Skills I Want" skills={wantedSkills} variant="wanted" />
       </div>
     </div>
   );

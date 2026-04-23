@@ -5,26 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import authService from "@/services/authService";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response: any = await authService.login({ email, password });
+      if (response.success) {
+        login(response.data);
+        toast({ title: "Welcome back!" });
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast({ title: error.message || "Login failed", variant: "destructive" });
+    } finally {
       setLoading(false);
-      toast({ title: "Welcome back!" });
-      navigate("/dashboard");
-    }, 800);
+    }
   };
 
   return (

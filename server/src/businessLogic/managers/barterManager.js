@@ -1,6 +1,7 @@
 const BarterModel = require("../../models/barterModel");
-const SkillModel = require("../../models/SkillModel");
+const SkillModel = require("../../models/skillModel");
 const AppError = require("../../errorHandlers/AppError");
+const { getIO } = require("../../models/utils/socket");
 
 class BarterManager {
 
@@ -28,15 +29,11 @@ class BarterManager {
     // Validate skills exist
     const requesterSkill = await skillModel.findOfferedSkillById(requester_skill_id);
 
-if (!requesterSkill || requesterSkill.user_id !== userId) {
-  throw new AppError("Invalid requester skill", 400, "Invalid requester skill");
-}
+    if (!requesterSkill || requesterSkill.user_id !== userId) {
+      throw new AppError("Invalid requester skill", 400, "Invalid requester skill");
+    }
 
-    // const receiverSkill = await skillModel.getUserOfferedSkills(receiver_id);
-    // const validReceiverSkill = receiverSkill.find(
-    //   s => s.id === receiver_skill_id
-    // );
-const receiverSkill = await skillModel.findOfferedSkillById(receiver_skill_id);
+    const receiverSkill = await skillModel.findOfferedSkillById(receiver_skill_id);
     if (!receiverSkill || receiverSkill.user_id !== receiver_id) {
       throw new AppError("Receiver does not offer this skill", 400, "Receiver does not offer this skill");
     }
@@ -114,7 +111,28 @@ const receiverSkill = await skillModel.findOfferedSkillById(receiver_skill_id);
       throw new AppError("Request already processed", 400);
     }
 
-    return barterModel.updateStatus(requestId, status);
+    const updatedRequest = await barterModel.updateStatus(requestId, status);
+
+    // Notify users via sockets if accepted
+    if (status === "accepted") {
+      try {
+        const io = getIO();
+        // Notify requester
+        io.to(`user_${updatedRequest.requester_id}`).emit("barter_accepted", {
+          barterId: requestId,
+          message: "Your barter request has been accepted! You can now chat and call."
+        });
+        // Notify receiver (the one who just accepted)
+        io.to(`user_${updatedRequest.receiver_id}`).emit("barter_accepted", {
+          barterId: requestId,
+          message: "Barter accepted successfully."
+        });
+      } catch (err) {
+        console.error("Failed to emit barter_accepted socket event:", err.message);
+      }
+    }
+
+    return updatedRequest;
   }
 
   // ===============================

@@ -7,27 +7,40 @@ import { Label } from "@/components/ui/label";
 import { allSkills } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
+import { skillService } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+
 export default function AddSkillPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [skill, setSkill] = useState("");
   const [type, setType] = useState<"offered" | "wanted">("offered");
   const [level, setLevel] = useState("Intermediate");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!skill || !description) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const skillData = { name: skill, level, description };
+      if (type === "offered") {
+        await skillService.addOffered(skillData);
+      } else {
+        await skillService.addWanted(skillData);
+      }
       toast({ title: `Skill "${skill}" added successfully!` });
       navigate("/dashboard");
-    }, 600);
+    } catch (err: any) {
+      toast({ title: err.message || "Failed to add skill", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

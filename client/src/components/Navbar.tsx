@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Brain, LayoutDashboard, Compass, ArrowLeftRight, Coins, User, LogOut, Menu, X, Sun, Moon } from "lucide-react";
+import { Brain, LayoutDashboard, Compass, ArrowLeftRight, Users, Coins, User, LogOut, Menu, X, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Explore", href: "/explore", icon: Compass },
   { label: "Requests", href: "/requests", icon: ArrowLeftRight },
+  { label: "Connections", href: "/connections", icon: Users },
   { label: "Credits", href: "/credits", icon: Coins },
   { label: "Profile", href: "/profile", icon: User },
 ];

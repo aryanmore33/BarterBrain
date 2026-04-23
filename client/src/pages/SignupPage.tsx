@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import authService from "@/services/authService";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
@@ -25,11 +26,17 @@ export default function SignupPage() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response: any = await authService.register({ name, email, password });
+      if (response.success) {
+        toast({ title: "Account created! You can now sign in 🎉" });
+        navigate("/login");
+      }
+    } catch (error: any) {
+      toast({ title: error.message || "Registration failed", variant: "destructive" });
+    } finally {
       setLoading(false);
-      toast({ title: "Account created! Welcome to BarterBrain 🎉" });
-      navigate("/dashboard");
-    }, 800);
+    }
   };
 
   return (

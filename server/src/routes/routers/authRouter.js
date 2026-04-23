@@ -15,19 +15,39 @@ router.post(
       data: user,
       message: "User registered successfully"
     };
-  }, [ACCESS_ROLES.ALL]) // allow all for registration
+  })
 );
 
 // LOGIN
 router.post(
   "/login",
-  appWrapper(async (req) => {
+  appWrapper(async (req, res) => {
     const data = await AuthenticationManager.loginUser(req.body);
+
+    // 🍪 Set cookie
+    res.cookie("token", data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     return {
       success: true,
-      data,
+      data: data.user,
       message: "Login successful"
+    };
+  })
+);
+
+// LOGOUT
+router.post(
+  "/logout",
+  appWrapper(async (req, res) => {
+    res.clearCookie("token");
+    return {
+      success: true,
+      message: "Logged out successfully"
     };
   })
 );

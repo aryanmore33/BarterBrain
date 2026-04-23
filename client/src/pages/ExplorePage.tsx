@@ -3,16 +3,18 @@ import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { users, allSkills, currentUser } from "@/services/api";
+import { users, allSkills } from "@/services/api";
 import { UserAvatar } from "@/components/SharedComponents";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ExplorePage() {
   const { toast } = useToast();
+  const { user: me } = useAuth();
   const [search, setSearch] = useState("");
   const [filterSkill, setFilterSkill] = useState("");
 
-  const otherUsers = users.filter((u) => u.id !== currentUser.id);
+  const otherUsers = users.filter((u) => u.id !== me?.id);
 
   const filtered = otherUsers.filter((u) => {
     const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||

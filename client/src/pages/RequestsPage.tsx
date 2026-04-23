@@ -1,33 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Check, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { barterRequests, currentUser, type BarterRequest } from "@/services/api";
+import { barterService, type BarterRequest } from "@/services/api";
 import { UserAvatar } from "@/components/SharedComponents";
 import { useToast } from "@/hooks/use-toast";
-import ChatPanel from "@/components/ChatPanel";
+import { useAuth } from "@/context/AuthContext";
+// import ChatPanel from "@/components/ChatPanel"; // Removing as we have MeetingPage
 
 type Tab = "incoming" | "sent" | "completed";
 
 export default function RequestsPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("incoming");
-  const [chatRequest, setChatRequest] = useState<BarterRequest | null>(null);
+  const [incoming, setIncoming] = useState<BarterRequest[]>([]);
+  const [sent, setSent] = useState<BarterRequest[]>([]);
+  const [completed, setCompleted] = useState<BarterRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const incoming = barterRequests.filter((r) => r.toUser.id === currentUser.id && r.status === "pending");
-  const sent = barterRequests.filter((r) => r.fromUser.id === currentUser.id && (r.status === "pending" || r.status === "accepted"));
-  const completed = barterRequests.filter((r) => r.status === "completed");
+  const fetchRequests = async () => {
+    try {
+      const response: any = await barterService.getRequests();
+      setIncoming(response.data.incoming || []);
+      setSent(response.data.outgoing || []);
+      setCompleted([...(response.data.incoming || []), ...(response.data.outgoing || [])].filter(r => r.status === 'completed'));
+    } catch (err) {
+      console.error("Failed to fetch requests", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const tabs: { key: Tab; label: string; count: number }[] = [
-    { key: "incoming", label: "Incoming", count: incoming.length },
-    { key: "sent", label: "Sent", count: sent.length },
-    { key: "completed", label: "Completed", count: completed.length },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchRequests();
+    }
+  }, [user]);
+
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      await barterService.updateStatus(id, status);
+      toast({ title: `Request ${status}` });
+      fetchRequests();
+    } catch (err: any) {
+      toast({ title: err.message || "Action failed", variant: "destructive" });
+    }
+  };
 
   const currentList = activeTab === "incoming" ? incoming : activeTab === "sent" ? sent : completed;
 
-  if (chatRequest) {
-    return <ChatPanel request={chatRequest} onBack={() => setChatRequest(null)} />;
+  if (loading) {
+    return <div className="py-20 text-center">Loading requests...</div>;
   }
 
   return (
@@ -39,17 +64,17 @@ export default function RequestsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-lg border border-border bg-muted p-1">
-        {tabs.map((tab) => (
+        {(["incoming", "sent", "completed"] as Tab[]).map((tab) => (
           <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.key
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors capitalize ${
+              activeTab === tab
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab.label} {tab.count > 0 && <span className="ml-1 text-xs">({tab.count})</span>}
+            {tab}
           </button>
         ))}
       </div>
@@ -57,7 +82,10 @@ export default function RequestsPage() {
       {/* Request cards */}
       <div className="space-y-3">
         {currentList.map((req) => {
-          const otherUser = req.fromUser.id === currentUser.id ? req.toUser : req.fromUser;
+          const isRequester = req.requester_id === user?.id;
+          const otherUser = isRequester ? req.receiver : req.requester;
+          if (!otherUser) return null;
+
           return (
             <div key={req.id} className="rounded-xl border border-border bg-card p-5 shadow-card transition-shadow hover:shadow-card-hover">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -66,26 +94,34 @@ export default function RequestsPage() {
                   <div>
                     <h3 className="font-medium text-foreground">{otherUser.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      <Badge variant="offered" className="mr-1">{req.skillOffered}</Badge>
+                      <Badge variant="offered" className="mr-1">
+                        {req.requester_skill?.name || "Skill"}
+                      </Badge>
                       ↔
-                      <Badge variant="wanted" className="ml-1">{req.skillWanted}</Badge>
+                      <Badge variant="wanted" className="ml-1">
+                        {req.receiver_skill?.name || "Skill"}
+                      </Badge>
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {activeTab === "incoming" && (
+                  {activeTab === "incoming" && req.status === "pending" && (
                     <>
-                      <Button size="sm" onClick={() => toast({ title: `Accepted barter with ${otherUser.name}!` })}>
+                      <Button size="sm" onClick={() => handleStatusUpdate(req.id, "accepted")}>
                         <Check className="mr-1 h-4 w-4" /> Accept
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => toast({ title: "Request declined" })}>
+                      <Button size="sm" variant="outline" onClick={() => handleStatusUpdate(req.id, "rejected")}>
                         <X className="mr-1 h-4 w-4" /> Decline
                       </Button>
                     </>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => setChatRequest(req)}>
-                    <MessageCircle className="mr-1 h-4 w-4" /> Chat
-                  </Button>
+                  {req.status === "accepted" && (
+                    <Button asChild size="sm" variant="default">
+                      <Link to={`/connections/${req.id}`}>
+                        <MessageCircle className="mr-1 h-4 w-4" /> Connect
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,10 +1,18 @@
 import { Coins, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { currentUser, creditTransactions } from "@/services/api";
+import { creditTransactions } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CreditsPage() {
-  const totalEarned = creditTransactions.filter((t) => t.type === "earned").reduce((a, t) => a + t.amount, 0);
-  const totalSpent = creditTransactions.filter((t) => t.type === "spent").reduce((a, t) => a + t.amount, 0);
+  const { user } = useAuth();
+  
+  // Real transactions would be fetched from an API, using empty for now
+  const transactions = creditTransactions || [];
+  
+  const totalEarned = transactions.filter((t) => t.type === "earned").reduce((a, t) => a + t.amount, 0);
+  const totalSpent = transactions.filter((t) => t.type === "spent").reduce((a, t) => a + t.amount, 0);
+
+  if (!user) return <div className="py-20 text-center">Loading...</div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
@@ -19,7 +27,7 @@ export default function CreditsPage() {
           <Coins className="h-7 w-7 text-primary" />
         </div>
         <p className="mt-3 text-sm text-muted-foreground">Current Balance</p>
-        <p className="font-display text-4xl font-bold text-foreground">{currentUser.credits}</p>
+        <p className="font-display text-4xl font-bold text-foreground">{user.credits}</p>
         <div className="mt-4 flex justify-center gap-6 text-sm">
           <div className="flex items-center gap-1 text-success">
             <ArrowUpRight className="h-4 w-4" /> Earned: {totalEarned}
