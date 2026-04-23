@@ -5,11 +5,16 @@ const socketAuth = require("./socketAuth");
 
 let io;
 
+const ALLOWED_ORIGINS = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim());
+
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: "*"
-    }
+      origin: ALLOWED_ORIGINS,   // ✅ Must be specific — "*" blocks cookies
+      credentials: true,
+    },
   });
 
   io.use(socketAuth); // 🔐 auth middleware
@@ -49,7 +54,10 @@ const initSocket = (server) => {
           message
         });
 
-        io.to(barterId).emit("receive_message", savedMessage);
+        // Broadcast to everyone ELSE in room (sender adds it optimistically)
+        socket.to(barterId).emit("receive_message", savedMessage);
+        // Also confirm back to sender with the DB-saved version (has real id/timestamp)
+        socket.emit("message_sent", savedMessage);
       } catch (error) {
         socket.emit("error", { message: "Failed to send message" });
       }

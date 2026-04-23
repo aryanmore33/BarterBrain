@@ -44,6 +44,18 @@ class SocketService {
     this.socket?.on("receive_message", callback);
   }
 
+  offMessage(callback: (message: any) => void) {
+    this.socket?.off("receive_message", callback);
+  }
+
+  onMessageSent(callback: (message: any) => void) {
+    this.socket?.on("message_sent", callback);
+  }
+
+  offMessageSent(callback: (message: any) => void) {
+    this.socket?.off("message_sent", callback);
+  }
+
   // WebRTC Signaling
   emitCall(barterId: string, offer: any) {
     this.socket?.emit("call_user", { barterId, offer });
@@ -51,6 +63,10 @@ class SocketService {
 
   onIncomingCall(callback: (data: { offer: any, from: string }) => void) {
     this.socket?.on("incoming_call", callback);
+  }
+
+  offIncomingCall(callback: (data: { offer: any, from: string }) => void) {
+    this.socket?.off("incoming_call", callback);
   }
 
   emitAnswer(barterId: string, answer: any) {
@@ -61,12 +77,20 @@ class SocketService {
     this.socket?.on("call_accepted", callback);
   }
 
+  offCallAccepted(callback: (data: { answer: any }) => void) {
+    this.socket?.off("call_accepted", callback);
+  }
+
   emitIceCandidate(barterId: string, candidate: any) {
     this.socket?.emit("ice_candidate", { barterId, candidate });
   }
 
   onIceCandidate(callback: (data: { candidate: any }) => void) {
     this.socket?.on("ice_candidate", callback);
+  }
+
+  offIceCandidate(callback: (data: { candidate: any }) => void) {
+    this.socket?.off("ice_candidate", callback);
   }
 
   emitEndCall(barterId: string) {
@@ -77,12 +101,20 @@ class SocketService {
     this.socket?.on("call_ended", callback);
   }
 
+  offCallEnded(callback: () => void) {
+    this.socket?.off("call_ended", callback);
+  }
+
   emitDeclineCall(barterId: string) {
     this.socket?.emit("decline_call", { barterId });
   }
 
   onCallDeclined(callback: () => void) {
     this.socket?.on("call_declined", callback);
+  }
+
+  offCallDeclined(callback: () => void) {
+    this.socket?.off("call_declined", callback);
   }
 
   // Notifications

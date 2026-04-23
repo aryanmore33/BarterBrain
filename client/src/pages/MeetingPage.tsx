@@ -47,6 +47,25 @@ export default function MeetingPage() {
   } = useWebRTC(barterId || "");
 
   useEffect(() => {
+    const onReceiveMessage = (msg: Message) => {
+      setMessages((prev) => [...prev, msg]);
+    };
+
+    // Replace optimistic sender message with real DB record (correct id/timestamp)
+    const onMessageSent = (msg: Message) => {
+      setMessages((prev) => {
+        // Replace the last optimistic message (same sender, same text) with real one
+        const idx = [...prev].reverse().findIndex(
+          (m) => m.sender_id === msg.sender_id && m.message === msg.message
+        );
+        if (idx === -1) return [...prev, msg];
+        const realIdx = prev.length - 1 - idx;
+        const updated = [...prev];
+        updated[realIdx] = msg;
+        return updated;
+      });
+    };
+
     const init = async () => {
       try {
         const response: any = await barterService.getRequests();
@@ -62,8 +81,13 @@ export default function MeetingPage() {
         const chatResponse: any = await chatService.getHistory(barterId!);
         setMessages(chatResponse.data || []);
 
+        // Connect socket THEN register listeners
         socketService.connect();
         socketService.joinRoom(barterId!);
+
+        // Register listeners AFTER socket is connected
+        socketService.onMessage(onReceiveMessage);
+        socketService.onMessageSent(onMessageSent);
       } catch (err) {
         console.error("Failed to initialize meeting", err);
         navigate("/connections");
@@ -74,13 +98,9 @@ export default function MeetingPage() {
       init();
     }
 
-    // Listen for new messages
-    socketService.onMessage((msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
-
     return () => {
-      // socketService.disconnect();
+      socketService.offMessage(onReceiveMessage);
+      socketService.offMessageSent(onMessageSent);
     };
   }, [barterId, user, navigate]);
 
