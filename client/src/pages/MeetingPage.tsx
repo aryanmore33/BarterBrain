@@ -43,7 +43,9 @@ export default function MeetingPage() {
     toggleScreenShare,
     isScreenSharing,
     localVideoRef,
-    remoteVideoRef
+    remoteVideoRef,
+    toggleVideo,
+    toggleAudio
   } = useWebRTC(barterId || "");
 
   useEffect(() => {
@@ -223,7 +225,11 @@ export default function MeetingPage() {
                   variant="ghost"
                   size="icon"
                   className={cn("rounded-full h-12 w-12", !micOn && "bg-destructive text-white hover:bg-destructive/80")}
-                  onClick={() => setMicOn(!micOn)}
+                  onClick={() => {
+                    const newState = !micOn;
+                    setMicOn(newState);
+                    toggleAudio(newState);
+                  }}
                 >
                   {micOn ? <Mic /> : <MicOff />}
                 </Button>
@@ -231,7 +237,11 @@ export default function MeetingPage() {
                   variant="ghost"
                   size="icon"
                   className={cn("rounded-full h-12 w-12", !videoOn && "bg-destructive text-white hover:bg-destructive/80")}
-                  onClick={() => setVideoOn(!videoOn)}
+                  onClick={() => {
+                    const newState = !videoOn;
+                    setVideoOn(newState);
+                    toggleVideo(newState);
+                  }}
                 >
                   {videoOn ? <VideoIcon /> : <VideoOff />}
                 </Button>

@@ -40,6 +40,7 @@ const initSocket = (server) => {
       }
 
       socket.join(barterId);
+      socket.to(barterId).emit("user_joined", { userId: socket.userId });
       console.log(`User ${socket.userId} joined room ${barterId}`);
     });
 

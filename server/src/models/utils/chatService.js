@@ -45,6 +45,16 @@ const chatService = {
     return db("messages")
       .where({ barter_id: barterId })
       .orderBy("created_at", "asc");
+  },
+
+  async getOtherParticipant(userId, barterId) {
+    const barter = await db("barter_requests")
+      .where({ id: barterId })
+      .first();
+
+    if (!barter) return null;
+
+    return barter.requester_id === userId ? barter.receiver_id : barter.requester_id;
   }
 };
 

@@ -217,11 +217,22 @@ export function useWebRTC(barterId: string) {
     const onCallEnded = () => cleanup();
     const onCallDeclined = () => cleanup();
 
+    const onUserJoined = async () => {
+      // If we've started a call but haven't connected yet, re-send offer when they join
+      if (isCalling && peerConnection.current && localStream && !remoteStream) {
+        console.log("Partner joined the room, sending offer...");
+        const offer = await peerConnection.current.createOffer();
+        await peerConnection.current.setLocalDescription(offer);
+        socketService.emitCall(barterId, offer);
+      }
+    };
+
     socketService.onIncomingCall(onIncomingCall);
     socketService.onCallAccepted(onCallAccepted);
     socketService.onIceCandidate(onIceCandidate);
     socketService.onCallEnded(onCallEnded);
     socketService.onCallDeclined(onCallDeclined);
+    socketService.onUserJoined(onUserJoined);
 
     return () => {
       socketService.offIncomingCall(onIncomingCall);
@@ -229,8 +240,9 @@ export function useWebRTC(barterId: string) {
       socketService.offIceCandidate(onIceCandidate);
       socketService.offCallEnded(onCallEnded);
       socketService.offCallDeclined(onCallDeclined);
+      socketService.offUserJoined(onUserJoined);
     };
-  }, [barterId, handleIncomingCall, cleanup]);
+  }, [barterId, handleIncomingCall, cleanup, isCalling, localStream, remoteStream]);
 
   return {
     localStream,
@@ -248,5 +260,15 @@ export function useWebRTC(barterId: string) {
     isScreenSharing,
     localVideoRef,
     remoteVideoRef,
+    toggleVideo: (enabled: boolean) => {
+      if (localStream) {
+        localStream.getVideoTracks().forEach(track => track.enabled = enabled);
+      }
+    },
+    toggleAudio: (enabled: boolean) => {
+      if (localStream) {
+        localStream.getAudioTracks().forEach(track => track.enabled = enabled);
+      }
+    }
   };
 }

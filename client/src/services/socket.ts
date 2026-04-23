@@ -122,6 +122,22 @@ class SocketService {
     this.socket?.on("barter_accepted", callback);
   }
 
+  onMeetingNotification(callback: (data: { barterId: string, callerName: string, type: string }) => void) {
+    this.socket?.on("meeting_notification", callback);
+  }
+
+  offMeetingNotification(callback: (data: { barterId: string, callerName: string, type: string }) => void) {
+    this.socket?.off("meeting_notification", callback);
+  }
+
+  onUserJoined(callback: (data: { userId: string }) => void) {
+    this.socket?.on("user_joined", callback);
+  }
+
+  offUserJoined(callback: (data: { userId: string }) => void) {
+    this.socket?.off("user_joined", callback);
+  }
+
   getSocket() {
     return this.socket;
   }
