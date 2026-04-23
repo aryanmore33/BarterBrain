@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MessageSquare, Video, ArrowRight, User } from "lucide-react";
+import { MessageSquare, Video, ArrowRight, User, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { barterService, type BarterRequest } from "@/services/api";
@@ -51,11 +51,21 @@ export default function ConnectionsPage() {
               <div className="flex flex-col items-center text-center gap-3">
                 <UserAvatar name={otherUser.name} className="h-16 w-16 text-lg" />
                 <div>
-                  <h3 className="font-bold text-foreground">{otherUser.name}</h3>
+                  <div className="flex items-center justify-center gap-2">
+                    <h3 className="font-bold text-foreground">{otherUser.name}</h3>
+                    <div className="flex items-center gap-1 text-xs text-warning">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      <span>{otherUser.avg_rating || "0.0"}</span>
+                    </div>
+                  </div>
                   <div className="mt-1 flex flex-wrap justify-center gap-1">
-                    <Badge variant="outline" className="text-[10px] uppercase">{conn.skillOffered}</Badge>
+                    <Badge variant="outline" className="text-[10px] uppercase">
+                      {conn.requester_skill?.name || "Skill"}
+                    </Badge>
                     <span className="text-xs text-muted-foreground">↔</span>
-                    <Badge variant="outline" className="text-[10px] uppercase">{conn.skillWanted}</Badge>
+                    <Badge variant="outline" className="text-[10px] uppercase">
+                      {conn.receiver_skill?.name || "Skill"}
+                    </Badge>
                   </div>
                 </div>
 

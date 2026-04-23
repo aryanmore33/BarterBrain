@@ -24,6 +24,8 @@ class RouteMap {
     Router.use("/skills", require("../routers/skillRouter"));
     Router.use("/barter", require("../routers/barterRouter"));
     Router.use("/chat", require("../routers/chatRouter"));
+    Router.use("/match", require("../routers/matchRouter"));
+    Router.use("/reviews", require("../routers/reviewRouter"));
     
     // Example protected route
     Router.get("/me", (req, res) => {

@@ -7,6 +7,8 @@ export interface User {
   avatar?: string;
   bio?: string;
   credits: number;
+  avg_rating?: string;
+  total_reviews?: number;
 }
 
 export interface Skill {
@@ -74,6 +76,21 @@ export const barterService = {
 export const chatService = {
   async getHistory(barterId: string) {
     return apiClient.get(`/api/chat/${barterId}/messages`);
+  },
+};
+
+export const matchService = {
+  async getMatches() {
+    return apiClient.get("/api/match");
+  },
+};
+
+export const reviewService = {
+  async addReview(data: { barter_id: string; rating: number; comment: string }) {
+    return apiClient.post("/api/reviews", data);
+  },
+  async getUserProfile(userId: string) {
+    return apiClient.get(`/api/reviews/${userId}`);
   },
 };
 

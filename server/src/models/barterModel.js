@@ -43,12 +43,45 @@ class BarterModel extends BaseModel {
   async getUserRequests(userId) {
     const db = await this.getQueryBuilder();
 
-    return db(this.table)
+    const data = await db(this.table)
       .where(function () {
-        this.where("requester_id", userId)
-            .orWhere("receiver_id", userId);
+        this.where("requester_id", userId).orWhere("receiver_id", userId);
       })
       .orderBy("created_at", "desc");
+
+    // Enhance data with user and skill info
+    return Promise.all(
+      data.map(async (row) => {
+        const [requester, receiver, reqSkill, recSkill] = await Promise.all([
+          db("users").where({ id: row.requester_id }).select("id", "name", "profile_pic").first(),
+          db("users").where({ id: row.receiver_id }).select("id", "name", "profile_pic").first(),
+          db("user_offered_skills as uos")
+            .join("skills as s", "s.id", "uos.skill_id")
+            .where({ "uos.id": row.requester_skill_id })
+            .select("s.name", "uos.level")
+            .first(),
+          db("user_offered_skills as uos")
+            .join("skills as s", "s.id", "uos.skill_id")
+            .where({ "uos.id": row.receiver_skill_id })
+            .select("s.name", "uos.level")
+            .first(),
+        ]);
+
+        // Get ratings for both users
+        const [reqRating, recRating] = await Promise.all([
+          db("reviews").where({ reviewee_id: row.requester_id }).avg("rating as avg").first(),
+          db("reviews").where({ reviewee_id: row.receiver_id }).avg("rating as avg").first(),
+        ]);
+
+        return {
+          ...row,
+          requester: { ...requester, avg_rating: parseFloat(reqRating?.avg || 0).toFixed(1) },
+          receiver: { ...receiver, avg_rating: parseFloat(recRating?.avg || 0).toFixed(1) },
+          requester_skill: reqSkill,
+          receiver_skill: recSkill,
+        };
+      })
+    );
   }
 
   // ===============================

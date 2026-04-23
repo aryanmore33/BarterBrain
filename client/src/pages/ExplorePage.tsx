@@ -1,28 +1,75 @@
-import { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Filter, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { users, allSkills } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+import { matchService, barterService, skillService, allSkills } from "@/services/api";
 import { UserAvatar } from "@/components/SharedComponents";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
 
 export default function ExplorePage() {
   const { toast } = useToast();
   const { user: me } = useAuth();
   const [search, setSearch] = useState("");
   const [filterSkill, setFilterSkill] = useState("");
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const otherUsers = users.filter((u) => u.id !== me?.id);
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response: any = await matchService.getMatches();
+        setMatches(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch matches", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (me) fetchMatches();
+  }, [me]);
 
-  const filtered = otherUsers.filter((u) => {
+  const handleRequestBarter = async (targetUser: any) => {
+    try {
+      // 1. Fetch my offered skills
+      const mySkillsResponse: any = await skillService.getMyOffered();
+      const mySkills = mySkillsResponse.data || [];
+
+      if (mySkills.length === 0) {
+        toast({ 
+          title: "No skills offered", 
+          description: "You must add at least one skill you offer before requesting a barter.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // 2. For now, use the first available skill as the requester skill
+      // In a full implementation, we'd show a modal to let the user choose.
+      const mySkillId = mySkills[0].id;
+
+      await barterService.createRequest({
+        receiver_id: targetUser.id,
+        requester_skill_id: mySkillId,
+        receiver_skill_id: targetUser.receiver_skill_id,
+        message: `Hi ${targetUser.name}, I'd like to barter my ${mySkills[0].name} for your ${targetUser.skill_name}!`
+      });
+
+      toast({ title: "Barter request sent!", description: `Request sent to ${targetUser.name}` });
+    } catch (err: any) {
+      toast({ title: err.message || "Failed to send request", variant: "destructive" });
+    }
+  };
+
+  const filtered = matches.filter((u) => {
     const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.skillsOffered.some((s) => s.name.toLowerCase().includes(search.toLowerCase())) ||
-      u.skillsWanted.some((s) => s.name.toLowerCase().includes(search.toLowerCase()));
-    const matchesFilter = !filterSkill || u.skillsOffered.some((s) => s.name === filterSkill);
+      u.skill_name.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = !filterSkill || u.skill_name === filterSkill;
     return matchesSearch && matchesFilter;
   });
+
+  if (loading) return <div className="py-20 text-center">Finding matches for you...</div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -66,32 +113,25 @@ export default function ExplorePage() {
               <UserAvatar name={user.name} className="h-12 w-12" />
               <div>
                 <h3 className="font-display font-semibold text-foreground">{user.name}</h3>
-                <p className="text-xs text-muted-foreground">⭐ {user.rating} · {user.reviewCount} reviews</p>
+                <div className="flex items-center gap-1 text-xs text-warning">
+                  <Star className="h-3 w-3 fill-current" />
+                  <span>{user.avg_rating}</span>
+                  <span className="text-muted-foreground">({user.total_reviews} reviews)</span>
+                </div>
               </div>
             </div>
 
             <div className="mt-4">
               <p className="text-xs font-medium text-muted-foreground mb-1.5">Offers</p>
               <div className="flex flex-wrap gap-1.5">
-                {user.skillsOffered.map((s) => (
-                  <Badge key={s.id} variant="offered">{s.name}</Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-3">
-              <p className="text-xs font-medium text-muted-foreground mb-1.5">Wants</p>
-              <div className="flex flex-wrap gap-1.5">
-                {user.skillsWanted.map((s) => (
-                  <Badge key={s.id} variant="wanted">{s.name}</Badge>
-                ))}
+                <Badge variant="offered">{user.skill_name} ({user.level})</Badge>
               </div>
             </div>
 
             <Button
               className="mt-4 w-full"
               size="sm"
-              onClick={() => toast({ title: `Barter request sent to ${user.name}!` })}
+              onClick={() => handleRequestBarter(user)}
             >
               Request Barter
             </Button>

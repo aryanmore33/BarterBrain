@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Check, X, MessageCircle } from "lucide-react";
+import { Check, X, MessageCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { barterService, type BarterRequest } from "@/services/api";
@@ -92,7 +92,13 @@ export default function RequestsPage() {
                 <div className="flex items-center gap-3">
                   <UserAvatar name={otherUser.name} className="h-11 w-11" />
                   <div>
-                    <h3 className="font-medium text-foreground">{otherUser.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-foreground">{otherUser.name}</h3>
+                      <div className="flex items-center gap-1 text-xs text-warning">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        <span>{otherUser.avg_rating || "0.0"}</span>
+                      </div>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       <Badge variant="offered" className="mr-1">
                         {req.requester_skill?.name || "Skill"}
