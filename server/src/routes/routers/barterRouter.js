@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const BarterManager = require("../../businessLogic/managers/BarterManager");
+const BarterManager = require("../../businessLogic/managers/barterManager");
 const { appWrapper } = require("../routeWrapper");
 
 // ===============================
