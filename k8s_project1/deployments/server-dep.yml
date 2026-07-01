@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: deployment
+metadata:
+  name: server-deployment
+  namespace: production
+spec: 
+  replicas: 2
+  selector:
+    matchLabels:
+      app: server
+  template: 
+    metadata:
+      name: server
+      namespace: production
+      labels:
+        app: server
+    spec:
+      containers:
+      - name: BarterBrain-Backend
+        image: aryanmore33/backend-app:latest
+        ports:
+        - containerPort: 3000
+        envFrom: 
+        - configMapRef:
+            name: env-configmap
+        - secretRef:
+            name: backend-secrets
