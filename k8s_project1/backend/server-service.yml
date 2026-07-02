@@ -5,18 +5,8 @@ metadata:
   namespace: development
 spec:
   selector:
-    app.kubernetes.io/name: server
+    app: server
   ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 9376
-
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 9377
-
     - name: api
       protocol: TCP
       port: 3000
