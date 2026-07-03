@@ -7,7 +7,12 @@ const Router = express.Router();
 const openRouter = express.Router();
 
 class RouteMap {
+  
   static setupRoutes(app) {
+    app.get("/ping", (req, res) => {
+  console.log("PING HIT");
+  res.json({ ok: true });
+});
 
     // 🔓 OPEN ROUTES
     app.use("/open/api", openRouter);
@@ -52,7 +57,7 @@ class RouteMap {
   }
 
   static _authMiddleware = jwt({
-    secret: process.env.JWT_SECRET_KEY,
+    secret: process.env.JWT_SECRET_KEY || process.env.JWT_SECRET,
     algorithms: ["HS256"],
     getToken: (req) => {
       // 1. Check Authorization header

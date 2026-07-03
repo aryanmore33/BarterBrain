@@ -13,12 +13,16 @@ const RouteMap = require("./src/routes/middleware/RouteMap");
 const ErrorHandler = require("./src/errorHandlers/ErrorHandler");
 
 const app = express();
+app.use((req, res, next) => {
+  console.log("REQUEST RECEIVED:", req.method, req.originalUrl);
+  next();
+});
 const PORT = process.env.PORT || 5000;
 
 // 🌍 CORS
 app.use(
   cors({
-    origin: true,
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
   })
 );
@@ -47,6 +51,13 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // 🚀 Routes
 RouteMap.setupRoutes(app);
+app.use((err, req, res, next) => {
+  if (err.name === "UnauthorizedError") {
+    console.error("🔴 JWT Error:", err.message); // Log it!
+    return res.status(401).json({ error: "Invalid or missing token" });
+  }
+  next(err); // Pass other errors to the global handler
+});
 
 // ❌ 404
 app.use((req, res, next) => {

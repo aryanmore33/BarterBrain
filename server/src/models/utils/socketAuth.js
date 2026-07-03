@@ -10,7 +10,7 @@ module.exports = (socket, next) => {
       return next(new Error("Authentication error"));
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY || process.env.JWT_SECRET);
 
     socket.userId = decoded.user_id;
 

@@ -16,7 +16,7 @@ COPY . .
 # Expose backend port
 EXPOSE 3000
 
-RUN npm install -g nodemon
+#RUN npm install -g nodemon
 
 # Start server
-CMD ["nodemon", "server.js"]
+CMD ["node", "server.js"]

@@ -62,7 +62,7 @@ class AuthenticationManager {
       {
         user_id: user.id
       },
-      process.env.JWT_SECRET_KEY,
+      process.env.JWT_SECRET_KEY || process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
