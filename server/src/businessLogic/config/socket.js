@@ -1,7 +1,7 @@
 const { Server } = require("socket.io");
-const chatService = require("./chatService");
-const webrtcEvents = require("./webrtcEvents");
-const socketAuth = require("./socketAuth");
+const chatService = require("../../models/utils/chatService");
+const webrtcEvents = require("../../models/utils/webrtcEvents");
+const socketAuth = require("../../models/utils/socketAuth");
 
 let io;
 
@@ -52,7 +52,7 @@ const initSocket = (server) => {
         const savedMessage = await chatService.saveMessage({
           barterId,
           senderId: socket.userId,
-          message
+          message //encrypted msg
         });
 
         // Broadcast to everyone ELSE in room (sender adds it optimistically)
