@@ -29,6 +29,7 @@ class RouteMap {
     Router.use("/skills", require("../routers/skillRouter"));
     Router.use("/barter", require("../routers/barterRouter"));
     Router.use("/chat", require("../routers/chatRouter"));
+    Router.use("/call", require("../routers/callRouter"));
     Router.use("/match", require("../routers/matchRouter"));
     Router.use("/reviews", require("../routers/reviewRouter"));
     

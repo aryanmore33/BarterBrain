@@ -1,87 +1,76 @@
 const { Server } = require("socket.io");
-const chatService = require("../../models/utils/chatService");
-const webrtcEvents = require("../../models/utils/webrtcEvents");
+const initializeRedisAdapter = require("./redisAdapter");
 const socketAuth = require("../../models/utils/socketAuth");
+
+const chatEvents = require("../../models/utils/chatEvents");
+const callEvents = require("../../models/utils/callEvents");
 
 let io;
 
 const ALLOWED_ORIGINS = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map((o) => o.trim());
+    .split(",")
+    .map(origin => origin.trim());
 
 const initSocket = (server) => {
-  io = new Server(server, {
-    cors: {
-      origin: ALLOWED_ORIGINS,   // ✅ Must be specific — "*" blocks cookies
-      credentials: true,
-    },
-  });
 
-  io.use(socketAuth); // 🔐 auth middleware
-
-  io.on("connection", (socket) => {
-    console.log("🔌 User connected:", socket.userId);
-
-    // Join a private room for the user to receive direct notifications
-    socket.join(`user_${socket.userId}`);
-
-    // =========================
-    // JOIN ROOM (Barter specific)
-    // =========================
-    socket.on("join_room", async ({ barterId }) => {
-      const isAllowed = await chatService.validateBarterAccess(
-        socket.userId,
-        barterId
-      );
-
-      if (!isAllowed) {
-        socket.emit("error", { message: "Access denied to this barter chat" });
-        return;
-      }
-
-      socket.join(barterId);
-      socket.to(barterId).emit("user_joined", { userId: socket.userId });
-      console.log(`User ${socket.userId} joined room ${barterId}`);
+    io = new Server(server,{
+        cors:{
+            origin:ALLOWED_ORIGINS,
+            credentials:true
+        }
     });
 
-    // =========================
-    // CHAT
-    // =========================
-    socket.on("send_message", async ({ barterId, message }) => {
-      try {
-        const savedMessage = await chatService.saveMessage({
-          barterId,
-          senderId: socket.userId,
-          message //encrypted msg
+    (async()=>{
+
+        try{
+
+            await initializeRedisAdapter(io);
+
+        }catch(err){
+
+            console.error("Redis Adapter:",err);
+
+        }
+
+    })();
+
+    io.use(socketAuth);
+
+    io.on("connection",(socket)=>{
+
+        console.log("🔌 User connected:",socket.userId);
+
+        socket.data.userId=socket.userId;
+
+        socket.join(`user_${socket.userId}`);
+
+        chatEvents(io,socket);
+
+        callEvents(io,socket);
+
+        socket.on("disconnect",()=>{
+
+            console.log("❌ User disconnected:",socket.userId);
+
         });
 
-        // Broadcast to everyone ELSE in room (sender adds it optimistically)
-        socket.to(barterId).emit("receive_message", savedMessage);
-        // Also confirm back to sender with the DB-saved version (has real id/timestamp)
-        socket.emit("message_sent", savedMessage);
-      } catch (error) {
-        socket.emit("error", { message: "Failed to send message" });
-      }
     });
 
-    // =========================
-    // WEBRTC EVENTS
-    // =========================
-    webrtcEvents(io, socket);
+    return io;
 
-    socket.on("disconnect", () => {
-      console.log("❌ User disconnected:", socket.userId);
-    });
-  });
-
-  return io;
 };
 
-const getIO = () => {
-  if (!io) {
-    throw new Error("Socket.io not initialized!");
-  }
-  return io;
+const getIO=()=>{
+
+    if(!io){
+        throw new Error("Socket.io not initialized");
+    }
+
+    return io;
+
 };
 
-module.exports = { initSocket, getIO };
+module.exports={
+    initSocket,
+    getIO
+};
