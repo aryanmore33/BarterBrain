@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const CallService = require("../../businessLogic/managers/callManager");
-// const callModel = require("../../models/callModel");
+const AppError = require("../../errorHandlers/AppError");
 const { appWrapper } = require("../routeWrapper");
 
 router.get("/:callId", appWrapper(async (req) => {
@@ -11,10 +11,10 @@ router.get("/:callId", appWrapper(async (req) => {
     const callService = new CallService(userId);
     const isParticipant = await callService.isParticipant(callId, userId);
     if (!isParticipant) {
-        return res.status(403).json({ success: false, error: "You are not a participant of this call." });
+        throw new AppError("You are not a participant of this call.", 403, "Forbidden");
     }
     const call = await callService.getCall(callId);
-    return res.json({ success: true, call });
+    return { success: true, data: call };
 }));
 
 router.get("/:callId/participants", appWrapper(async (req) => {
@@ -23,7 +23,7 @@ router.get("/:callId/participants", appWrapper(async (req) => {
     const callService = new CallService(userId);
     const isParticipant = await callService.isParticipant(callId, userId);
     if (!isParticipant) {
-        return res.status(403).json({ success: false, error: "You are not a participant of this call." });
+        throw new AppError("You are not a participant of this call.", 403, "Forbidden");
     }
     const participants = await callService.getParticipants(callId);
     return {
@@ -38,7 +38,7 @@ router.get("/:callId/logs", appWrapper(async (req) => {
     const callService = new CallService(userId);
     const isParticipant = await callService.isParticipant(callId, userId);
     if (!isParticipant) {
-        return res.status(403).json({ success: false, error: "You are not a participant of this call." });
+        throw new AppError("You are not a participant of this call.", 403, "Forbidden");
     }
     const logs = await callService.getLogs(callId);
     return {
@@ -52,11 +52,11 @@ router.get("/barter/:barterRequestId", appWrapper(async (req) => {
     const { barterRequestId } = req.params;
     const callService = new CallService(userId);
     const hasAccess = await callService.validateBarterAccess(
-            userId,
-            barterRequestId
-        );
+        userId,
+        barterRequestId
+    );
     if (!hasAccess) {
-      throw new Error("Unauthorized");
+        throw new AppError("Unauthorized", 403, "Forbidden");
     }
     const call = await callService.getCallByBarter(barterRequestId);
     return {
@@ -67,15 +67,15 @@ router.get("/barter/:barterRequestId", appWrapper(async (req) => {
 
 router.get("/:callId/reconnect", appWrapper(async (req) => {
     const userId = req.user.id;
-    const { callId  } = req.params;
+    const { callId } = req.params;
     const callService = new CallService(userId);
     const isParticipant = await callService.isParticipant(callId, userId);
     if (!isParticipant) {
-        return res.status(403).json({ success: false, error: "You are not a participant of this call." });
+        throw new AppError("You are not a participant of this call.", 403, "Forbidden");
     }
     const call = await callService.getCall(callId);
-    if(!call || call.status !== "accepted"){
-        return res.status(400).json({ success: false, error: "Call is not active." });
+    if (!call || call.status !== "accepted") {
+        throw new AppError("Call is not active.", 400, "Bad Request");
     }
     return {
         success: true,

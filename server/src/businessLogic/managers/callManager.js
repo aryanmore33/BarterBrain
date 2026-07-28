@@ -1,4 +1,4 @@
-const CallModel = require("../models/CallModel");
+const CallModel = require("../../models/callModel");
 
 class CallService {
   constructor(userId) {

@@ -44,7 +44,7 @@ export default function CreditsPage() {
           <h2 className="font-display font-semibold text-foreground">Transaction History</h2>
         </div>
         <div className="divide-y divide-border">
-          {creditTransactions.map((t) => (
+          {transactions.map((t) => (
             <div key={t.id} className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <div className={`flex h-9 w-9 items-center justify-center rounded-full ${

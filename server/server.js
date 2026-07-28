@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { initSocket } = require("./src/models/utils/socket");
+const { initSocket } = require("./src/businessLogic/config/socket");
 const express = require("express");
 const http = require("http"); // 🔥 IMPORTANT
 const path = require("path");

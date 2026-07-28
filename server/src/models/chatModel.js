@@ -26,7 +26,7 @@ class ChatModel extends BaseModel {
         return barter.requester_id === userId || barter.receiver_id === userId;
     }
 
-    async getOtherParticipant(barterId, userId) {
+    async getOtherParticipant(userId, barterId) {
         const db = await this.getQueryBuilder();
         const barter = await db(this.barterTable)
             .where(this.whereStatement({ id: barterId }))
@@ -66,7 +66,7 @@ class ChatModel extends BaseModel {
                 read_at: db.fn.now()
             }));
 
-        const receiverId = await this.getOtherParticipant(barterId, senderId);
+        const receiverId = await this.getOtherParticipant(senderId, barterId);
         if (receiverId) {
             await db(this.receiptsTable)
                 .insert(this.insertStatement({
@@ -135,7 +135,7 @@ class ChatModel extends BaseModel {
 
     async getMessages(barterId, limit = 50, offset = 0) {
         const db = await this.getQueryBuilder();
-        const message = await db(`${this.messagesTable} as m`)
+        const messages = await db(`${this.messagesTable} as m`)
             .leftJoin(`${this.usersTable} as u`, "u.id", "m.sender_id")
             .where("m.barter_id", barterId)
             .orderBy("m.created_at", "asc")
@@ -146,46 +146,90 @@ class ChatModel extends BaseModel {
                 "u.name as sender_name",
                 "u.profile_pic as sender_profile_pic"
             )
-        return Promise.all(
-            message.map(async (message) => {
-                const [attachments, receipts] = await Promise.all([
-                    db(this.attachmentsTable)
-                        .where({ message_id: message.id })
-                        .orderBy("created_at", "asc"),
-                    db(`${this.receiptsTable} as mr`)
-                        .join(`${this.usersTable} as u`, "u.id", "mr.user_id")
-                        .where({ "mr.message_id": message.id })
-                        .select(
-                            "mr.*",
-                            "u.name",
-                            "u.profile_pic"
-                        )
-                ])
-                let replyMessage = null;
-                if (message.reply_to_message_id) {
-                    replyMessage = await db(`${this.messagesTable} as m`)
-                        .leftJoin(`${this.usersTable} as u`, "u.id", "m.sender_id")
-                        .where("m.id", message.reply_to_message_id)
-                        .select(
-                            "m.id",
-                            "m.ciphertext",
-                            "m.iv",
-                            "m.auth_tag",
-                            "m.message_type",
-                            "m.deleted_at",
-                            "u.name as sender_name"
-                        )
-                        .first();
-                }
-                return {
-                    ...message,
-                    attachments,
-                    receipts,
-                    reply_message: replyMessage
-                }
-            })
-        )
+        if(!messages.length){ return[]; }
+        const messageIds = messages.map(m => m.id);
+        const replyIds = messages.filter(m => m.reply_to_message_id).map(m => m.reply_to_message_id);
+        const attachments = await db(this.attachmentsTable).whereIn("message_id", messageIds).orderBy("created_at", "asc");
+        const receipts = await db(`${this.receiptsTable} as mr`).join(
+            `${this.usersTable} as u`, "u.id", "mr.user_id"
+        ).whereIn("mr.message_id", messageIds).select("mr.*", "u.name", "u.profile_pic");
+        let replyMessages = [];
+        if (replyIds.length) {
+            replyMessages = await db(`${this.messagesTable} as m`)
+            .leftJoin(`${this.usersTable} as u`, "u.id", "m.sender_id")
+            .whereIn("m.id", replyIds)
+            .select(
+                "m.id",
+                "m.ciphertext",
+                "m.iv",
+                "m.auth_tag",
+                "m.message_type",
+                "m.deleted_at",
+                "u.name as sender_name"
+            )
+        }
+        const attachmentMap = {};
+        attachments.forEach(a => {
+            if (!attachmentMap[a.message_id]) {
+                attachmentMap[a.message_id] = [];
+            }
+            attachmentMap[a.message_id].push(a);
+        })
+        const receiptMap = {};
+        receipts.forEach(r => {
+            if (!receiptMap[r.message_id]) { receiptMap[r.message_id] = []; }
+            receiptMap[r.message_id].push(r);
+        })
+        const replyMap = {};
+        replyMessages.forEach(r => { replyMap[r.id] = r; })
+        return messages.map(message => ({
+            ...message,
+            attachments: attachmentMap[message.id] || [],
+            receipts: receiptMap[message.id] || [],
+            reply_message: message.reply_to_message_id ? replyMap[message.reply_to_message_id] || null : null
+        }))
     }
+
+        // return Promise.all(
+        //     message.map(async (message) => {
+        //         const [attachments, receipts] = await Promise.all([
+        //             db(this.attachmentsTable)
+        //                 .where({ message_id: message.id })
+        //                 .orderBy("created_at", "asc"),
+        //             db(`${this.receiptsTable} as mr`)
+        //                 .join(`${this.usersTable} as u`, "u.id", "mr.user_id")
+        //                 .where({ "mr.message_id": message.id })
+        //                 .select(
+        //                     "mr.*",
+        //                     "u.name",
+        //                     "u.profile_pic"
+        //                 )
+        //         ])
+        //         let replyMessage = null;
+        //         if (message.reply_to_message_id) {
+        //             replyMessage = await db(`${this.messagesTable} as m`)
+        //                 .leftJoin(`${this.usersTable} as u`, "u.id", "m.sender_id")
+        //                 .where("m.id", message.reply_to_message_id)
+        //                 .select(
+        //                     "m.id",
+        //                     "m.ciphertext",
+        //                     "m.iv",
+        //                     "m.auth_tag",
+        //                     "m.message_type",
+        //                     "m.deleted_at",
+        //                     "u.name as sender_name"
+        //                 )
+        //                 .first();
+        //         }
+        //         return {
+        //             ...message,
+        //             attachments,
+        //             receipts,
+        //             reply_message: replyMessage
+        //         }
+        //     })
+        // )
+    // }
 
     async updateMessageStatus(messageId, status) {  
         const db = await this.getQueryBuilder();

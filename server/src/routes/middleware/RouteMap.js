@@ -30,6 +30,8 @@ class RouteMap {
     Router.use("/barter", require("../routers/barterRouter"));
     Router.use("/chat", require("../routers/chatRouter"));
     Router.use("/call", require("../routers/callRouter"));
+    Router.use("/keys", require("../routers/keyRoutes"));
+    Router.use("/chat-keys", require("../routers/chatKeyRoutes"));
     Router.use("/match", require("../routers/matchRouter"));
     Router.use("/reviews", require("../routers/reviewRouter"));
     
@@ -38,21 +40,6 @@ class RouteMap {
       res.json({
         success: true,
         user: req.user
-      });
-    });
-
-    // JWT Error handler
-    app.use((err, req, res, next) => {
-      if (err.name === "UnauthorizedError") {
-        return next(new AuthenticationError("Invalid or missing token"));
-      }
-      next(err);
-    });
-
-    // 404
-    app.use((req, res) => {
-      res.status(404).json({
-        message: "Route not found"
       });
     });
   }

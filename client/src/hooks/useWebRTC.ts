@@ -13,13 +13,13 @@ export function useWebRTC(barterId: string) {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isCalling, setIsCalling] = useState(false);
   const [isReceivingCall, setIsReceivingCall] = useState(false);
-  const [incomingOffer, setIncomingOffer] = useState<any>(null);
+  const [incomingCallData, setIncomingCallData] = useState<any>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const peerConnection = useRef<RTCPeerConnection | null>(null);
+  const currentCallId = useRef<string | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  // Buffer ICE candidates received before remote description is set
   const iceCandidateBuffer = useRef<RTCIceCandidate[]>([]);
   const remoteDescSet = useRef(false);
 
@@ -35,15 +35,14 @@ export function useWebRTC(barterId: string) {
     setRemoteStream(null);
     setIsCalling(false);
     setIsReceivingCall(false);
-    setIncomingOffer(null);
+    setIncomingCallData(null);
     setIsScreenSharing(false);
     iceCandidateBuffer.current = [];
     remoteDescSet.current = false;
+    currentCallId.current = null;
   }, []);
 
-  // ✅ FIX: Accept stream as parameter so we don't read stale React state
-  const setupPeerConnection = useCallback((stream: MediaStream) => {
-    // Close any existing connection first
+  const setupPeerConnection = useCallback((stream: MediaStream, callId: string) => {
     if (peerConnection.current) {
       peerConnection.current.close();
     }
@@ -54,85 +53,90 @@ export function useWebRTC(barterId: string) {
     const pc = new RTCPeerConnection(ICE_SERVERS);
 
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketService.emitIceCandidate(barterId, event.candidate);
+      if (event.candidate && callId) {
+        socketService.sendIceCandidate(callId, event.candidate);
       }
     };
 
     pc.ontrack = (event) => {
-      setRemoteStream(event.streams[0]);
+      if (event.streams && event.streams[0]) {
+        setRemoteStream(event.streams[0]);
+      }
     };
 
     pc.onconnectionstatechange = () => {
       console.log("WebRTC connection state:", pc.connectionState);
       if (pc.connectionState === "connected") {
         setIsCalling(true);
+      } else if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+        cleanup();
       }
     };
 
-    // ✅ FIX: Use passed stream, not stale state
     stream.getTracks().forEach((track) => {
       pc.addTrack(track, stream);
     });
 
     peerConnection.current = pc;
     return pc;
-  }, [barterId]);
+  }, [cleanup]);
 
   const startCall = async () => {
+    if (!barterId) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setLocalStream(stream);
       setIsCalling(true);
 
-      // ✅ FIX: Pass stream directly instead of relying on state
-      const pc = setupPeerConnection(stream);
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      socketService.emitCall(barterId, offer);
+      socketService.startCall(barterId, async (response) => {
+        if (response && response.success && response.call) {
+          const callId = response.call.id;
+          currentCallId.current = callId;
+          const pc = setupPeerConnection(stream, callId);
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socketService.sendOffer(callId, offer);
+        } else {
+          console.error("Failed to start call:", response?.error);
+          cleanup();
+        }
+      });
     } catch (error) {
       console.error("Error starting call:", error);
-      setIsCalling(false);
+      cleanup();
     }
   };
 
-  const handleIncomingCall = useCallback(({ offer }: { offer: any }) => {
-    setIncomingOffer(offer);
-    setIsReceivingCall(true);
-  }, []);
-
   const answerCall = async () => {
+    if (!incomingCallData || !incomingCallData.callId) return;
+    const callId = incomingCallData.callId;
+    currentCallId.current = callId;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setLocalStream(stream);
 
-      // ✅ FIX: Pass stream directly
-      const pc = setupPeerConnection(stream);
-      await pc.setRemoteDescription(new RTCSessionDescription(incomingOffer));
-      remoteDescSet.current = true;
-
-      // ✅ FIX: Flush buffered ICE candidates
-      for (const candidate of iceCandidateBuffer.current) {
-        await pc.addIceCandidate(candidate).catch(console.warn);
-      }
-      iceCandidateBuffer.current = [];
-
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      socketService.emitAnswer(barterId, answer);
-      setIsReceivingCall(false);
-      setIsCalling(true);
+      socketService.acceptCall(callId, async (response) => {
+        if (response && response.success) {
+          setupPeerConnection(stream, callId);
+          setIsReceivingCall(false);
+          setIsCalling(true);
+        } else {
+          console.error("Failed to accept call:", response?.error);
+          cleanup();
+        }
+      });
     } catch (error) {
       console.error("Error answering call:", error);
+      cleanup();
     }
   };
 
   const declineCall = () => {
-    socketService.emitDeclineCall(barterId);
-    setIsReceivingCall(false);
-    setIncomingOffer(null);
+    if (incomingCallData?.callId) {
+      socketService.rejectCall(incomingCallData.callId);
+    }
+    cleanup();
   };
 
   const toggleScreenShare = async () => {
@@ -153,6 +157,9 @@ export function useWebRTC(barterId: string) {
           stopScreenShare();
         };
 
+        if (currentCallId.current) {
+          socketService.toggleScreenShare(currentCallId.current, true);
+        }
         setIsScreenSharing(true);
       } catch (error) {
         console.error("Error sharing screen:", error);
@@ -175,6 +182,9 @@ export function useWebRTC(barterId: string) {
         }
       }
 
+      if (currentCallId.current) {
+        socketService.toggleScreenShare(currentCallId.current, false);
+      }
       setIsScreenSharing(false);
     } catch (error) {
       console.error("Error stopping screen share:", error);
@@ -182,17 +192,34 @@ export function useWebRTC(barterId: string) {
   };
 
   useEffect(() => {
-    const onIncomingCall = (data: { offer: any; from: string }) =>
-      handleIncomingCall({ offer: data.offer });
+    const handleIncomingCall = (data: { callId: string; barterRequestId: string; initiatorId: string }) => {
+      if (data.barterRequestId === barterId) {
+        setIncomingCallData(data);
+        setIsReceivingCall(true);
+      }
+    };
 
-    const onCallAccepted = async ({ answer }: { answer: any }) => {
+    const handleOffer = async ({ callId, offer }: { callId: string; offer: any }) => {
       if (peerConnection.current) {
-        await peerConnection.current.setRemoteDescription(
-          new RTCSessionDescription(answer)
-        );
+        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(offer));
         remoteDescSet.current = true;
 
-        // ✅ FIX: Flush any buffered ICE candidates
+        for (const candidate of iceCandidateBuffer.current) {
+          await peerConnection.current.addIceCandidate(candidate).catch(console.warn);
+        }
+        iceCandidateBuffer.current = [];
+
+        const answer = await peerConnection.current.createAnswer();
+        await peerConnection.current.setLocalDescription(answer);
+        socketService.sendAnswer(callId, answer);
+      }
+    };
+
+    const handleAnswer = async ({ answer }: { answer: any }) => {
+      if (peerConnection.current) {
+        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer));
+        remoteDescSet.current = true;
+
         for (const candidate of iceCandidateBuffer.current) {
           await peerConnection.current.addIceCandidate(candidate).catch(console.warn);
         }
@@ -200,49 +227,40 @@ export function useWebRTC(barterId: string) {
       }
     };
 
-    const onIceCandidate = ({ candidate }: { candidate: any }) => {
-      if (!peerConnection.current) return;
+    const handleIceCandidate = ({ candidate }: { candidate: any }) => {
+      if (!peerConnection.current || !candidate) return;
 
       const iceCandidate = new RTCIceCandidate(candidate);
 
       if (remoteDescSet.current) {
-        // Remote description already set — add immediately
         peerConnection.current.addIceCandidate(iceCandidate).catch(console.warn);
       } else {
-        // ✅ FIX: Buffer until remote description is set
         iceCandidateBuffer.current.push(iceCandidate);
       }
     };
 
-    const onCallEnded = () => cleanup();
-    const onCallDeclined = () => cleanup();
+    const handleCallEnded = () => cleanup();
+    const handleCallRejected = () => cleanup();
+    const handleUserLeft = () => cleanup();
 
-    const onUserJoined = async () => {
-      // If we've started a call but haven't connected yet, re-send offer when they join
-      if (isCalling && peerConnection.current && localStream && !remoteStream) {
-        console.log("Partner joined the room, sending offer...");
-        const offer = await peerConnection.current.createOffer();
-        await peerConnection.current.setLocalDescription(offer);
-        socketService.emitCall(barterId, offer);
-      }
-    };
-
-    socketService.onIncomingCall(onIncomingCall);
-    socketService.onCallAccepted(onCallAccepted);
-    socketService.onIceCandidate(onIceCandidate);
-    socketService.onCallEnded(onCallEnded);
-    socketService.onCallDeclined(onCallDeclined);
-    socketService.onUserJoined(onUserJoined);
+    socketService.onIncomingCall(handleIncomingCall);
+    socketService.onOffer(handleOffer);
+    socketService.onAnswer(handleAnswer);
+    socketService.onIceCandidate(handleIceCandidate);
+    socketService.onCallEnded(handleCallEnded);
+    socketService.onCallRejected(handleCallRejected);
+    socketService.onUserLeft(handleUserLeft);
 
     return () => {
-      socketService.offIncomingCall(onIncomingCall);
-      socketService.offCallAccepted(onCallAccepted);
-      socketService.offIceCandidate(onIceCandidate);
-      socketService.offCallEnded(onCallEnded);
-      socketService.offCallDeclined(onCallDeclined);
-      socketService.offUserJoined(onUserJoined);
+      socketService.offIncomingCall(handleIncomingCall);
+      socketService.offOffer(handleOffer);
+      socketService.offAnswer(handleAnswer);
+      socketService.offIceCandidate(handleIceCandidate);
+      socketService.offCallEnded(handleCallEnded);
+      socketService.offCallRejected(handleCallRejected);
+      socketService.offUserLeft(handleUserLeft);
     };
-  }, [barterId, handleIncomingCall, cleanup, isCalling, localStream, remoteStream]);
+  }, [barterId, cleanup]);
 
   return {
     localStream,
@@ -253,7 +271,9 @@ export function useWebRTC(barterId: string) {
     answerCall,
     declineCall,
     endCall: () => {
-      socketService.emitEndCall(barterId);
+      if (currentCallId.current) {
+        socketService.endCall(currentCallId.current);
+      }
       cleanup();
     },
     toggleScreenShare,
@@ -262,13 +282,19 @@ export function useWebRTC(barterId: string) {
     remoteVideoRef,
     toggleVideo: (enabled: boolean) => {
       if (localStream) {
-        localStream.getVideoTracks().forEach(track => track.enabled = enabled);
+        localStream.getVideoTracks().forEach((track) => (track.enabled = enabled));
+      }
+      if (currentCallId.current) {
+        socketService.toggleCamera(currentCallId.current, enabled);
       }
     },
     toggleAudio: (enabled: boolean) => {
       if (localStream) {
-        localStream.getAudioTracks().forEach(track => track.enabled = enabled);
+        localStream.getAudioTracks().forEach((track) => (track.enabled = enabled));
       }
-    }
+      if (currentCallId.current) {
+        socketService.toggleMic(currentCallId.current, enabled);
+      }
+    },
   };
 }

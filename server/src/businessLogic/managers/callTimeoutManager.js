@@ -1,5 +1,5 @@
-const CallService = require("../services/CallService");
-const socketEmitter = require("./socketEmitter");
+const CallService = require("../managers/callManager");
+const socketEmitter = require("../../models/utils/socketEmitter");
 
 const activeTimeouts = new Map();
 

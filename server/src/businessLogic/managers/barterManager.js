@@ -1,7 +1,7 @@
 const BarterModel = require("../../models/barterModel");
 const SkillModel = require("../../models/skillModel");
 const AppError = require("../../errorHandlers/AppError");
-const { getIO } = require("../../models/utils/socket");
+const { getIO } = require("../config/socket");
 
 class BarterManager {
 

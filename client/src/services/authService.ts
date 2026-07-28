@@ -1,25 +1,34 @@
 import apiClient from "./apiClient";
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
 const authService = {
-  async login(credentials: any) {
-    const response: any = await apiClient.post("/open/api/auth/login", credentials);
-    return response;
+
+  async login(credentials: LoginCredentials) {
+    return apiClient.post("/open/api/auth/login", credentials);
   },
 
-  async register(data: any) {
-    const response: any = await apiClient.post("/open/api/auth/register", data);
-    return response;
+  async register(data: RegisterData) {
+    return apiClient.post("/open/api/auth/register", data);
   },
 
   async logout() {
-    const response: any = await apiClient.post("/open/api/auth/logout");
-    return response;
+    return apiClient.post("/open/api/auth/logout");
   },
 
   async getMe() {
-    const response: any = await apiClient.get("/api/me");
-    return response;
+    return apiClient.get("/api/me");
   }
+
 };
 
 export default authService;

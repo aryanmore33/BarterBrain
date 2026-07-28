@@ -1,4 +1,3 @@
-const app = require("../../server");
 const AppError = require("./AppError");
 
 class ErrorHandler {

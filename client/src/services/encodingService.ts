@@ -1,0 +1,16 @@
+export function encodeBase64 (data: Uint8Array){
+    let binary = "";
+    data.forEach(byte => {
+        binary += String.fromCharCode(byte);
+    })
+    return btoa(binary);
+}
+
+export function decodeBase64(base64: string) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i=0; i<binary.length; i++){
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}

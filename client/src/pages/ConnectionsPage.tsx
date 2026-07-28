@@ -16,8 +16,11 @@ export default function ConnectionsPage() {
     const fetchConnections = async () => {
       try {
         const response: any = await barterService.getRequests();
-        const all = [...response.data.incoming, ...response.data.outgoing];
-        setConnections(all.filter((r) => r.status === "accepted"));
+        const incoming = response.data?.incoming || [];
+        const outgoing = response.data?.outgoing || [];
+        const all = [...incoming, ...outgoing];
+        const accepted = all.filter((r: BarterRequest) => r.status === "accepted");
+        setConnections(accepted);
       } catch (err) {
         console.error("Failed to fetch connections", err);
       } finally {

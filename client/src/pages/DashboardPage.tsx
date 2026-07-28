@@ -102,7 +102,7 @@ function StatCard({ icon: Icon, label, value, color }: {
 
 function SkillSection({ title, skills, variant }: {
   title: string;
-  skills: typeof currentUser.skillsOffered;
+  skills: Skill[];
   variant: "offered" | "wanted";
 }) {
   return (

@@ -63,9 +63,11 @@ export default function ExplorePage() {
   };
 
   const filtered = matches.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.skill_name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = !filterSkill || u.skill_name === filterSkill;
+    const name = u.name || "";
+    const skillName = u.skill_name || "";
+    const matchesSearch = name.toLowerCase().includes(search.toLowerCase()) ||
+      skillName.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = !filterSkill || skillName === filterSkill;
     return matchesSearch && matchesFilter;
   });
 
