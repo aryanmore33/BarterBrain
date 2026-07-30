@@ -47,7 +47,7 @@ router.get(
   "/offered",
   appWrapper(async (req) => {
     const userId = req.user.id;
-
+    // console.log("User:", req.user.id);
     const data = await SkillManager.getMyOfferedSkills(userId);
 
     return {

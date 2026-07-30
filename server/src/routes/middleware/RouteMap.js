@@ -2,23 +2,24 @@ const express = require("express");
 const { expressjwt: jwt } = require("express-jwt");
 
 const AuthenticationError = require("../../errorHandlers/AuthenticationError");
+const AuthModel = require("../../models/AuthModel");
 
 const Router = express.Router();
 const openRouter = express.Router();
 
 class RouteMap {
-  
+
   static setupRoutes(app) {
     app.get("/ping", (req, res) => {
-  console.log("PING HIT");
-  res.json({ ok: true });
-});
+      // console.log("PING HIT");
+      res.json({ ok: true });
+    });
 
     // 🔓 OPEN ROUTES
     app.use("/open/api", openRouter);
     openRouter.use("/auth", require("../routers/authRouter"));
 
-    
+
     // 🔐 PROTECTED ROUTES
     app.use(
       "/api",
@@ -34,7 +35,7 @@ class RouteMap {
     Router.use("/chat-keys", require("../routers/chatKeyRoutes"));
     Router.use("/match", require("../routers/matchRouter"));
     Router.use("/reviews", require("../routers/reviewRouter"));
-    
+
     // Example protected route
     Router.get("/me", (req, res) => {
       res.json({
@@ -60,11 +61,25 @@ class RouteMap {
     }
   });
 
-  static _attachUser = (req, res, next) => {
-    req.user = {
-      id: req.auth.user_id
-    };
-    next();
+
+  static _attachUser = async (req, res, next) => {
+    try {
+      const userModel = new AuthModel();
+
+      const user = await userModel.findById(req.auth.user_id);
+
+      if (!user) {
+        return next(new AuthenticationError("User not found"));
+      }
+
+      delete user.password;
+
+      req.user = user;
+
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 }
 

@@ -16,12 +16,17 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const offered: any = await skillService.getMyOffered();
-        const wanted: any = await skillService.getMyWanted();
+        const offered = await skillService.getMyOffered();
+        const wanted = await skillService.getMyWanted();
+
+        console.log("Current user:", user?.id);
+        console.log("Offered response:", offered);
+        console.log("Wanted response:", wanted);
+
         setOfferedSkills(offered.data || []);
         setWantedSkills(wanted.data || []);
       } catch (err) {
-        console.error("Failed to fetch skills", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -44,7 +49,10 @@ export default function DashboardPage() {
           <UserAvatar name={user.name} className="h-14 w-14 text-lg" />
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              Welcome back, {user.name.split(" ")[0]}!
+              Welcome back, {
+                // user.name.split(" ")[0]
+                user.name?.split(" ")[0] ?? "User"
+              }!
             </h1>
             <p className="text-sm text-muted-foreground">Ready to exchange some skills today?</p>
           </div>
@@ -88,11 +96,10 @@ function StatCard({ icon: Icon, label, value, color }: {
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">{value}</p>
         </div>
-        <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${
-          color === "primary" ? "bg-primary/10 text-primary" :
-          color === "warning" ? "bg-warning/10 text-warning" :
-          "bg-success/10 text-success"
-        }`}>
+        <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${color === "primary" ? "bg-primary/10 text-primary" :
+            color === "warning" ? "bg-warning/10 text-warning" :
+              "bg-success/10 text-success"
+          }`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
