@@ -379,11 +379,10 @@ class ChatModel extends BaseModel {
             .orderBy("mr.created_at", "asc");
     }
 
-    async setOnline(userId, socketId) {
+    async setOnline(userId) {
         const db = await this.getQueryBuilder();
         const insertData = this.insertStatement({
             user_id: userId,
-            socket_id: socketId,
             online: true,
             typing_in_barter: null,
             last_seen : db.fn.now()
@@ -392,7 +391,6 @@ class ChatModel extends BaseModel {
             .insert(insertData)
             .onConflict(["user_id"])
             .merge({
-                socket_id: socketId,
                 online: true,
                 last_seen: db.fn.now()
             })
@@ -407,7 +405,6 @@ class ChatModel extends BaseModel {
         const [presence] = await db(this.presenceTable)
             .where({ user_id: userId })
             .update({
-                socket_id: null,
                 online: false,
                 typing_in_barter: null,
                 last_seen: db.fn.now()

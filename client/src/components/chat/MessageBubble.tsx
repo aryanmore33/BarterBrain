@@ -217,7 +217,7 @@ export default function MessageBubble({
 
                     {message.deleted_for_everyone ? (
 
-                        <p className="italic text-gray-500">
+                        <p className="italic text-gray-700">
 
                             This message was deleted.
 
@@ -229,7 +229,7 @@ export default function MessageBubble({
 
                             {message.message_type === "text" && (
 
-                                <p className="whitespace-pre-wrap break-words">
+                                <p className="whitespace-pre-wrap break-words text-black">
 
                                     {text}
 

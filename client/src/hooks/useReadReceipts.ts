@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { chatSocketService } from "@/services/chatService";
 import { useChat } from "@/context/ChatContext";
+import { useAuth } from "@/context/AuthContext";
 
 export function useReadReceipts() {
 
@@ -9,6 +10,7 @@ export function useReadReceipts() {
         messages,
         updateMessage
     } = useChat();
+    const { user } = useAuth();
 
     const deliveredMessageIdsRef = useRef<Set<string>>(new Set());
 
@@ -19,7 +21,11 @@ export function useReadReceipts() {
 
         messages.forEach(message => {
 
-            if (message.status === "sent" && !deliveredMessageIdsRef.current.has(message.id)) {
+            if (
+                message.sender_id !== user?.id &&
+                message.status === "sent" &&
+                !deliveredMessageIdsRef.current.has(message.id)
+            ) {
 
                 deliveredMessageIdsRef.current.add(message.id);
 
@@ -29,7 +35,7 @@ export function useReadReceipts() {
 
         });
 
-    }, [messages]);
+    }, [messages, user?.id]);
 
     /**
      * Server says message delivered

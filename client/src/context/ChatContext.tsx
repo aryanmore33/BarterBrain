@@ -2,12 +2,16 @@ import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useState
 } from "react";
 
 import { chatService, Message } from "@/services/api";
 import { keyService } from "@/services/keyService";
+import { chatSocketService } from "@/services/chatService";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 interface ChatContextType {
 
@@ -79,6 +83,8 @@ export function ChatProvider({
 
 }) {
 
+    const { user } = useAuth();
+
     const [barterId, setBarterId] =
     useState<string | null>(null);
 
@@ -97,6 +103,15 @@ export function ChatProvider({
     const [editingMessage, setEditingMessage] =
     useState<Message | null>(null);
 
+    useEffect(() => {
+        if (!user) return;
+        let active = true;
+        void keyService.initialize()
+            .then(() => { if (active) chatSocketService.connect(); })
+            .catch(error => console.error("Unable to initialize end-to-end encryption", error));
+        return () => { active = false; };
+    }, [user]);
+
     const openChat = useCallback(
 
         async (id: string) => {
@@ -105,6 +120,7 @@ export function ChatProvider({
 
             try {
 
+                await keyService.initialize();
                 await keyService.getChatKey(id);
 
                 const response: any =
@@ -332,6 +348,53 @@ export function ChatProvider({
         []
 
     );
+
+    useEffect(() => {
+        if (!user) return;
+        chatSocketService.connect();
+        const receive = (message: Message) => addMessage(message);
+        const ack = ({ tempId, message }: { tempId?: string; message: Message }) => {
+            if (tempId) replaceTempMessage(tempId, message);
+            else addMessage(message);
+        };
+        const update = (message: Message) => updateMessage(message);
+        const remove = (message: Message | string) => {
+            if (typeof message === "string") removeMessage(message);
+            else updateMessage(message);
+        };
+        const delivered = ({ messageId }: { messageId: string }) => markDelivered(messageId);
+        const read = ({ messageId }: { messageId: string }) => markRead(messageId);
+        const typingStart = ({ barterId: id }: { barterId: string }) => { if (id === barterId) setTyping(true); };
+        const typingStop = ({ barterId: id }: { barterId: string }) => { if (id === barterId) setTyping(false); };
+        const chatError = ({ message }: { message?: string }) => {
+            toast({
+                variant: "destructive",
+                title: "Message was not sent",
+                description: message ?? "The chat server rejected the message."
+            });
+        };
+
+        chatSocketService.onMessage(receive);
+        chatSocketService.onMessageAck(ack);
+        chatSocketService.onMessageEdited(update);
+        chatSocketService.on("message_deleted", remove);
+        chatSocketService.onDelivered(delivered);
+        chatSocketService.onRead(read);
+        chatSocketService.onTypingStart(typingStart);
+        chatSocketService.onTypingStop(typingStop);
+        chatSocketService.on("chat_error", chatError);
+        return () => {
+            chatSocketService.off("receive_message", receive);
+            chatSocketService.off("message_ack", ack);
+            chatSocketService.off("message_edited", update);
+            chatSocketService.off("message_deleted", remove);
+            chatSocketService.off("message_delivered", delivered);
+            chatSocketService.off("message_read", read);
+            chatSocketService.off("typing_start", typingStart);
+            chatSocketService.off("typing_stop", typingStop);
+            chatSocketService.off("chat_error", chatError);
+        };
+    }, [user, barterId, addMessage, replaceTempMessage, updateMessage, removeMessage, markDelivered, markRead]);
 
     /*
         Reply

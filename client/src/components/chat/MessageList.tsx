@@ -94,15 +94,11 @@ export default function MessageList({
 
     }
 
-    if (!messages.length) {
-
-        return <EmptyChat />;
-
-    }
-
     return (
 
-        <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-3">
+        <div className="flex-1 overflow-y-auto bg-black px-4 py-3">
+
+            {!messages.length && <EmptyChat />}
 
             {renderedMessages}
 

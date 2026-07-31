@@ -38,7 +38,8 @@ module.exports = (io, socket) => {
             });
             socket.to(`chat_${data.barterId}`).emit("receive_message", result.message);
         } catch (err) {
-            socket.emit("error", { message: err.message });
+            console.error("send_message failed:", err);
+            socket.emit("chat_error", { message: err.message });
         }
     });
 

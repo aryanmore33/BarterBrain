@@ -4,9 +4,13 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_BACKE
 
 export class SocketService {
   private socket: Socket | null = null;
+  private joinedChats = new Set<string>();
 
   connect() {
-    if (this.socket?.connected) return;
+    if (this.socket) {
+      if (!this.socket.connected) this.socket.connect();
+      return;
+    }
 
     this.socket = io(SOCKET_URL, {
       withCredentials: true,
@@ -20,6 +24,11 @@ export class SocketService {
 
     this.socket.on("connect", () => {
       console.log("Connected to socket server", this.socket?.id);
+      this.socket?.emit("online");
+      // Socket.io rooms are server-side state and disappear on reconnect.
+      this.joinedChats.forEach((barterId) => {
+        this.socket?.emit("join_chat", { barterId });
+      });
     });
 
     this.socket.on("disconnect", (reason) => {
@@ -64,6 +73,7 @@ export class SocketService {
   }
 
   joinChat(barterId: string) {
+    this.joinedChats.add(barterId);
     this.socket?.emit("join_chat", { barterId });
   }
 
@@ -72,6 +82,7 @@ export class SocketService {
   }
 
   leaveChat(barterId: string) {
+    this.joinedChats.delete(barterId);
     this.emit("leave_chat", { barterId });
   }
 

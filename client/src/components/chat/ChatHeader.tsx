@@ -1,12 +1,7 @@
-import {
-
-    Phone,
-
-    Video
-
-} from "lucide-react";
+import { ArrowLeft, Video } from "lucide-react";
 
 import { usePresence } from "@/hooks/usePresence";
+import { useNavigate } from "react-router-dom";
 
 interface ChatHeaderProps {
 
@@ -17,10 +12,7 @@ interface ChatHeaderProps {
     receiverAvatar?: string;
 
     typing?: boolean;
-
-    onVoiceCall?: () => void;
-
-    onVideoCall?: () => void;
+    barterId: string;
 
 }
 
@@ -33,10 +25,7 @@ export default function ChatHeader({
     receiverAvatar,
 
     typing = false,
-
-    onVoiceCall,
-
-    onVideoCall
+    barterId
 
 }: ChatHeaderProps) {
 
@@ -47,6 +36,7 @@ export default function ChatHeader({
         lastSeen
 
     } = usePresence(receiverId);
+    const navigate = useNavigate();
 
     function getSubtitle() {
 
@@ -74,9 +64,10 @@ export default function ChatHeader({
 
     return (
 
-        <div className="flex items-center justify-between border-b bg-white px-4 py-3">
+        <div className="flex items-center justify-between border-b bg-card px-4 py-3">
 
             <div className="flex items-center gap-3">
+                <button onClick={() => navigate("/connections")} className="rounded-full p-2 hover:bg-muted" aria-label="Back to connections"><ArrowLeft size={20} /></button>
 
                 {receiverAvatar ? (
 
@@ -121,22 +112,9 @@ export default function ChatHeader({
             <div className="flex gap-2">
 
                 <button
-
-                    onClick={onVoiceCall}
-
-                    className="rounded-full p-2 hover:bg-gray-100"
-
-                >
-
-                    <Phone size={20} />
-
-                </button>
-
-                <button
-
-                    onClick={onVideoCall}
-
-                    className="rounded-full p-2 hover:bg-gray-100"
+                    onClick={() => navigate(`/connections/${barterId}/call`)}
+                    className="rounded-full p-2 text-primary hover:bg-muted"
+                    aria-label="Start video call"
 
                 >
 

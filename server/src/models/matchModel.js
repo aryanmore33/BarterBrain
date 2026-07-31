@@ -48,9 +48,9 @@ class MatchModel {
       );
 
     // Debug
-    console.log("Current User:", userId);
-    console.log("SQL:", query.toSQL().sql);
-    console.log("Bindings:", query.toSQL().bindings);
+    // console.log("Current User:", userId);
+    // console.log("SQL:", query.toSQL().sql);
+    // console.log("Bindings:", query.toSQL().bindings);
 
     return query;
   }

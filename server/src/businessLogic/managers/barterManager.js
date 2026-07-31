@@ -1,6 +1,7 @@
 const BarterModel = require("../../models/barterModel");
 const SkillModel = require("../../models/skillModel");
 const AppError = require("../../errorHandlers/AppError");
+const ChatKeyManager = require("./chatKeyManager");
 const { getIO } = require("../config/socket");
 
 class BarterManager {
@@ -115,16 +116,18 @@ class BarterManager {
 
     // Notify users via sockets if accepted
     if (status === "accepted") {
+      const chatKeyManager = new ChatKeyManager(userId);
+      await chatKeyManager.createChatKey(updatedRequest.id)
       try {
         const io = getIO();
         // Notify requester
         io.to(`user_${updatedRequest.requester_id}`).emit("barter_accepted", {
-          barterId: requestId,
+          barterId: updatedRequest.id,
           message: "Your barter request has been accepted! You can now chat and call."
         });
         // Notify receiver (the one who just accepted)
         io.to(`user_${updatedRequest.receiver_id}`).emit("barter_accepted", {
-          barterId: requestId,
+          barterId: updatedRequest.id,
           message: "Barter accepted successfully."
         });
       } catch (err) {

@@ -143,7 +143,7 @@ export interface Call {
 }
 
 export const keyApiService = {
-  async registerPublicKey(data: { publicKey: string }) {
+  async registerPublicKey(data: { publicKey: string; algorithm: string;}) {
     return apiClient.post("/api/keys/register", data)
   },
   async getMyKey() {

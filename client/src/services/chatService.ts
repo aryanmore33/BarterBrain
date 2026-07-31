@@ -12,8 +12,9 @@ class ChatService {
         ciphertext: string;
         iv: string;
         auth_tag: string;
-        message_type?: "text" | "image" | "file" | "audio" | "video";
-        reply_to_message_id?: string | null;
+    message_type?: "text" | "image" | "file" | "audio" | "video";
+    reply_to_message_id?: string | null;
+    tempId?: string;
     }) { socketService.sendMessage(data) }
 
     editMessage(data: {

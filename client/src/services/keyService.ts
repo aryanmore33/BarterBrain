@@ -6,7 +6,19 @@ import { decodeBase64 } from "./encodingService";
 
 class KeyService {
     private chatKeys = new Map<string, CryptoKey>();
+    private initialization: Promise<void> | null = null;
     async initialize(): Promise<void> {
+        if (this.initialization) return this.initialization;
+        this.initialization = this.initializeIdentity();
+        try {
+            await this.initialization;
+        } catch (error) {
+            this.initialization = null;
+            throw error;
+        }
+    }
+
+    private async initializeIdentity(): Promise<void> {
         const identity = await indexedDbService.getIdentityKeyPair();
         if (!identity) {
             await this.createIdentity();
@@ -17,7 +29,7 @@ class KeyService {
         } catch {
             //  Backend lost the key. re-register
             const publicKey = await webCryptoService.exportPublicKey(identity.publicKey);
-            await keyApiService.registerPublicKey({publicKey})
+            await keyApiService.registerPublicKey({publicKey, algorithm: "ECDH-P256"})
         }
     }
 
@@ -25,7 +37,7 @@ class KeyService {
         const keyPair = await webCryptoService.generateIdentityKeyPair();
         await indexedDbService.saveIdentityKeyPair(keyPair);
         const publicKey = await webCryptoService.exportPublicKey(keyPair.publicKey);
-        await keyApiService.registerPublicKey({publicKey})
+        await keyApiService.registerPublicKey({publicKey, algorithm: "ECDH-P256"})
     }
     
     async getIdentityKeyPair(): Promise<CryptoKeyPair> {
@@ -70,17 +82,22 @@ class KeyService {
     }
     private async getLatestMetadata(barterId: string) {
         let metadata = await indexedDbService.getSessionMetadata(barterId);
-        if(!metadata) {
-            return await this.fetchSessionMetadata(barterId);
-        }
         const response = await keyApiService.getSessionKey(barterId);
         const latest = response.data;
-        if (latest.version !== metadata.version) {
-            await indexedDbService.deleteSessionMetadata(barterId);
+
+        // Older clients cached this field as `publicKey`. Repair that cache
+        // automatically after the API was corrected to `peerPublicKey`.
+        if (
+            !metadata ||
+            !metadata.peerPublicKey ||
+            latest.version !== metadata.version ||
+            latest.peerPublicKey !== metadata.peerPublicKey
+        ) {
             this.chatKeys.delete(barterId);
             await indexedDbService.saveSessionMetadata(barterId, latest);
             metadata = latest;
         }
+
         return metadata;
     }
 

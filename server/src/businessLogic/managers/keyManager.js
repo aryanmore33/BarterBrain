@@ -1,7 +1,7 @@
 const KeyModel = require("../../models/keyModel");
 const ChatModel = require("../../models/chatModel");
 const ChatKeyModel = require("../../models/chatKeyModel");
-
+const ChatKeyManager = require("./chatKeyManager");
 class KeyManager {
     constructor(userId) {
         this.userId = userId;
@@ -18,7 +18,7 @@ class KeyManager {
             throw new Error("Public key is required");
         }
         return this.keyModel.upsertUserKey({
-            userId : this.userId,
+            userId: this.userId,
             publicKey,
             algorithm
         });
@@ -98,12 +98,13 @@ class KeyManager {
         if (!peerPublicKey) {
             throw new Error("Peer public key not found");
         }
-        const chatKey = await this.chatKeyModel.getChatKey(barterId)
+        let chatKey = await this.chatKeyModel.getChatKey(barterId)
         if (!chatKey) {
-            throw new Error("Chat key not found");
+            const chatKeyManager = new ChatKeyManager(this.userId);
+            chatKey = await chatKeyManager.createChatKey(barterId);
         }
-        return{
-            publicKey: peerPublicKey.public_key,
+        return {
+            peerPublicKey: peerPublicKey.public_key,
             algorithm: peerPublicKey.algorithm,
             salt: chatKey.salt,
             version: chatKey.version

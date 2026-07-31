@@ -15,16 +15,19 @@ import ExplorePage from "./pages/ExplorePage";
 import RequestsPage from "./pages/RequestsPage";
 import CreditsPage from "./pages/CreditsPage";
 import ConnectionsPage from "./pages/ConnectionsPage";
+import ChatPage from "./pages/ChatPage";
 import MeetingPage from "./pages/MeetingPage";
 import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "@/context/AuthContext";
+import { ChatProvider } from "@/context/ChatContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <ChatProvider>
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
@@ -41,14 +44,16 @@ const App = () => (
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/requests" element={<RequestsPage />} />
                 <Route path="/connections" element={<ConnectionsPage />} />
-                <Route path="/connections/:barterId" element={<MeetingPage />} />
+                <Route path="/connections/:barterId" element={<ChatPage />} />
                 <Route path="/credits" element={<CreditsPage />} />
               </Route>
+              <Route path="/connections/:barterId/call" element={<MeetingPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
+      </ChatProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

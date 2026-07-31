@@ -11,9 +11,8 @@ import { useParams } from "react-router-dom";
 import ChatWindow from "@/components/chat/ChatWindow";
 
 import { useAuth } from "@/context/AuthContext";
-import { useChat } from "@/context/ChatContext";
 
-import apiClient from "@/services/apiClient";
+import { barterService, type BarterRequest } from "@/services/api";
 
 interface ChatInfo {
 
@@ -45,12 +44,6 @@ export default function ChatPage() {
 
     } = useAuth();
 
-    const {
-
-        loading
-
-    } = useChat();
-
     const [
 
         chatInfo,
@@ -69,19 +62,25 @@ export default function ChatPage() {
 
         loadChat();
 
-    }, [barterId]);
+    }, [barterId, user]);
 
     async function loadChat() {
 
         try {
 
-            const response = await apiClient.get(
-
-                `/api/chat/${barterId}`
-
-            );
-
-            setChatInfo(response.data);
+            const response: any = await barterService.getRequests();
+            const requests: BarterRequest[] = [
+                ...(response.data?.incoming ?? []),
+                ...(response.data?.outgoing ?? [])
+            ];
+            const barter = requests.find(request => request.id === barterId && request.status === "accepted");
+            if (!barter || !user) return;
+            const receiver = barter.requester_id === user.id ? barter.receiver : barter.requester;
+            if (!receiver) return;
+            setChatInfo({
+                barterId,
+                receiver: { id: receiver.id, name: receiver.name, avatar: receiver.avatar }
+            });
 
         }
 
@@ -107,7 +106,7 @@ export default function ChatPage() {
 
     }
 
-    if (loading || !chatInfo || !user) {
+    if (!chatInfo || !user) {
 
         return (
 
@@ -123,7 +122,7 @@ export default function ChatPage() {
 
     return (
 
-        <div className="mx-auto flex h-screen max-w-6xl">
+        <div className="mx-auto flex h-[calc(100vh-10rem)] max-w-5xl">
 
             <div className="flex-1 overflow-hidden p-5">
 

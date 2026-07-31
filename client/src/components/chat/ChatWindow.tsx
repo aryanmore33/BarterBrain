@@ -45,8 +45,6 @@ export default function ChatWindow({
 
         typing,
 
-        setTyping,
-
         openChat,
 
         closeChat
@@ -61,41 +59,12 @@ export default function ChatWindow({
 
     useEffect(() => {
 
-        chatSocketService.connect();
-
-        const handleTypingStart = () => {
-            setTyping(true);
-        };
-
-        const handleTypingStop = () => {
-            setTyping(false);
-        };
-
-        chatSocketService.on("typing_start", handleTypingStart);
-        chatSocketService.on("typing_stop", handleTypingStop);
-
-        return () => {
-            chatSocketService.off("typing_start", handleTypingStart);
-            chatSocketService.off("typing_stop", handleTypingStop);
-        };
-
-    }, [setTyping]);
-
-    useEffect(() => {
-
         let mounted = true;
 
         async function initialize() {
 
-            chatSocketService.connect();
-
-            chatSocketService.joinChat(barterId);
-
-            if (mounted) {
-
-                await openChat(barterId);
-
-            }
+            await openChat(barterId);
+            if (mounted) chatSocketService.joinChat(barterId);
 
         }
 
@@ -115,7 +84,7 @@ export default function ChatWindow({
 
     return (
 
-        <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-white">
+        <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-black">
 
             <ChatHeader
 
@@ -126,6 +95,8 @@ export default function ChatWindow({
                 receiverAvatar={receiverAvatar}
 
                 typing={typing}
+
+                barterId={barterId}
 
             />
 
