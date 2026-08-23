@@ -1,0 +1,195 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '15'))
+  }
+
+  parameters {
+    choice(
+      name: 'DEPLOY_TARGET',
+      choices: ['ec2', 'eks'],
+      description: 'Choose where to deploy the application.'
+    )
+  }
+
+  environment {
+    AWS_REGION      = 'ap-south-1'
+    EKS_CLUSTER     = 'barterbrain-eks'
+    ECR_REPOSITORY  = 'barterbrain-backend'
+    K8S_NAMESPACE   = 'barterbrain'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install and Test Client') {
+      steps {
+        dir('client') {
+          sh '''
+            npm ci
+            npm run lint
+            npm run test
+            npm run build
+          '''
+        }
+      }
+    }
+
+    stage('Install and Check Server') {
+      steps {
+        dir('server') {
+          sh '''
+            npm ci
+            node --check server.js
+          '''
+        }
+      }
+    }
+
+    stage('Prepare Image Details') {
+      when {
+        expression { params.DEPLOY_TARGET == 'eks' }
+      }
+
+      steps {
+        script {
+          env.AWS_ACCOUNT_ID = sh(
+            script: 'aws sts get-caller-identity --query Account --output text',
+            returnStdout: true
+          ).trim()
+
+          env.GIT_COMMIT_SHORT = sh(
+            script: 'git rev-parse --short HEAD',
+            returnStdout: true
+          ).trim()
+
+          env.IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT_SHORT}"
+          env.IMAGE_REPO_URI = "${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPOSITORY}"
+          env.IMAGE_URI = "${env.IMAGE_REPO_URI}:${env.IMAGE_TAG}"
+        }
+      }
+    }
+
+    stage('Build and Scan Backend Image') {
+      when {
+        expression { params.DEPLOY_TARGET == 'eks' }
+      }
+
+      steps {
+        sh '''
+          docker build \
+            --file server/dockerfile \
+            --tag "$IMAGE_URI" \
+            server
+
+          trivy image \
+            --exit-code 1 \
+            --severity HIGH,CRITICAL \
+            "$IMAGE_URI"
+        '''
+      }
+    }
+
+    stage('Push Image to Amazon ECR') {
+      when {
+        expression { params.DEPLOY_TARGET == 'eks' }
+      }
+
+      steps {
+        sh '''
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login \
+                --username AWS \
+                --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+          docker push "$IMAGE_URI"
+        '''
+      }
+    }
+
+    stage('Deploy to EC2') {
+      when {
+        expression { params.DEPLOY_TARGET == 'ec2' }
+      }
+
+      steps {
+        withCredentials([
+          file(
+            credentialsId: 'barterbrain-server-env',
+            variable: 'SERVER_ENV_FILE'
+          )
+        ]) {
+          sh '''
+            cp "$SERVER_ENV_FILE" server/.env
+
+            docker compose up -d --build --remove-orphans
+
+            docker compose ps
+          '''
+        }
+      }
+    }
+
+    stage('Deploy to EKS') {
+      when {
+        expression { params.DEPLOY_TARGET == 'eks' }
+      }
+
+      steps {
+        withCredentials([
+          file(
+            credentialsId: 'barterbrain-server-env',
+            variable: 'SERVER_ENV_FILE'
+          )
+        ]) {
+          sh '''
+            aws eks update-kubeconfig \
+              --region "$AWS_REGION" \
+              --name "$EKS_CLUSTER"
+
+            kubectl apply -f k8s/namespace.yaml
+
+            kubectl create secret generic barterbrain-api-env \
+              --namespace "$K8S_NAMESPACE" \
+              --from-env-file="$SERVER_ENV_FILE" \
+              --dry-run=client \
+              -o yaml \
+              | kubectl apply -f -
+
+            sed "s|IMAGE_URI|$IMAGE_URI|g" k8s/backend.yaml \
+              | kubectl apply -f -
+
+            kubectl rollout status \
+              deployment/barterbrain-api \
+              --namespace "$K8S_NAMESPACE" \
+              --timeout=180s
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      sh '''
+        rm -f server/.env
+        docker image prune -f || true
+      '''
+    }
+
+    success {
+      echo "Deployment completed successfully: ${params.DEPLOY_TARGET}"
+    }
+
+    failure {
+      echo "Pipeline failed. Review the Jenkins console output."
+    }
+  }
+}
