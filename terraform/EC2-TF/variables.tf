@@ -13,3 +13,7 @@ variable "instance_type" {
   description = "instance type for ec2"
   default = "t3.medium"
 }
+
+variable "iam_name" {
+  default = "my_iam"
+}

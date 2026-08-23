@@ -4,6 +4,11 @@ resource "aws_key_pair" "deployer" {
   public_key = file("${path.module}/terrakeys/terraKey.pub")
 }
 
+resource "aws_iam_instance_profile" "iam-profile" {
+  name = "Jenkins-profile"
+  role = aws_iam_role.iam-role.name
+}
+
 # VPC and security groups
 resource "aws_default_vpc" "default" {
   tags = {
@@ -23,7 +28,7 @@ resource "aws_subnet" "jenkins_sub" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_default_vpc.default.id
   tags = {
-    Name = "jenkind-igw"
+    Name = "jenkins-igw"
   }
 }
 
@@ -142,6 +147,7 @@ resource "aws_instance" "my_instance" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.jenkins_sub.id
+  iam_instance_profile = aws_iam_instance_profile.iam-profile.name
   
   # Ensures you get an external IP address to log into
   associate_public_ip_address = true 
