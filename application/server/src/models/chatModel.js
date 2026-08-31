@@ -1,4 +1,4 @@
-const BaseModel = require("../models/libs/BaseModel");
+const BaseModel = require("./libs/BaseModel");
 // const Db = require("../../models/libs/Db");  
 
 class ChatModel extends BaseModel {

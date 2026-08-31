@@ -1,4 +1,4 @@
-const BaseModel = require("../models/libs/BaseModel");
+const BaseModel = require("./libs/BaseModel");
 
 class CallModel extends BaseModel {
   constructor(userId) {

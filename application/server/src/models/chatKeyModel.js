@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const BaseModel = require("../models/libs/BaseModel");
+const BaseModel = require("./libs/BaseModel");
 const { table } = require("console");
 
 class ChatKeyModel extends BaseModel {
