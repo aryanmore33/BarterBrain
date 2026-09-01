@@ -14,6 +14,13 @@ class RouteMap {
       // console.log("PING HIT");
       res.json({ ok: true });
     });
+    app.get("/health", (req, res) => {
+      res.status(200).json({
+        success: true,
+        service: "barterbrain-backend",
+        status: "healthy",
+      });
+    });
 
     // 🔓 OPEN ROUTES
     app.use("/open/api", openRouter);

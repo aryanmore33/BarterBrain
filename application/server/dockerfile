@@ -8,7 +8,9 @@ WORKDIR /server
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+# RUN npm install
+RUN npm ci 
+# ci because it gives Jenkins/Docker reproducible dependency installation based on your lockfile.
 
 # Copy rest of the code
 COPY . .
@@ -20,3 +22,27 @@ EXPOSE 3000
 
 # Start server
 CMD ["node", "server.js"]
+
+# FROM node:22-alpine AS dependencies
+
+# WORKDIR /server
+
+# COPY package*.json ./
+
+# RUN npm ci --omit=dev
+
+
+# FROM node:22-alpine AS production
+
+# WORKDIR /server
+
+# ENV NODE_ENV=production
+
+# COPY --from=dependencies /server/node_modules ./node_modules
+# COPY . .
+
+# EXPOSE 3000
+
+# USER node
+
+# CMD ["node", "server.js"]
