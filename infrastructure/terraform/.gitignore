@@ -1,1 +1,101 @@
 /terraKeys
+
+# ============================================================
+# Terraform
+# ============================================================
+
+# Terraform working directory
+/.terraform
+**/.terraform/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+terraform.tfstate
+terraform.tfstate.backup
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Terraform plan files
+*.tfplan
+*.plan
+plan.out
+vpc.tfplan
+
+# Terraform lock file
+# IMPORTANT: KEEP this file in Git.
+# .terraform.lock.hcl should NOT be ignored.
+
+
+# ============================================================
+# Terraform Variable Files / Secrets
+# ============================================================
+
+# Local variable files
+*.tfvars
+*.tfvars.json
+
+# Exception: safe example variables file
+!*.tfvars.example
+
+# Environment-specific secret files
+*.secret.tfvars
+*.secrets.tfvars
+
+
+# ============================================================
+# AWS Credentials / Keys
+# ============================================================
+
+# AWS credential/config files if accidentally placed here
+.aws/
+**/.aws/
+
+# Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+
+# ============================================================
+# Terraform-generated files
+# ============================================================
+
+.terraform.tfstate.lock.info
+
+# Terraform debug logs
+*.log
+
+
+# ============================================================
+# IDE / Editor files
+# ============================================================
+
+.vscode/
+.idea/
+
+# VS Code workspace files
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
+# ============================================================
+# Temporary files
+# ============================================================
+
+*.tmp
+*.temp
+*.bak
+*~
