@@ -1,30 +1,40 @@
-variable "cluster-name" {
-  default = "my_cluster"
+variable "project_name" {
+  type = string
 }
-variable "igw-name" {
-  default = "jenkins-igw"
+variable "environment" {
+  type = string
 }
-variable "subnet-name" {
-  
+variable "cluster_name" {
+  type = string
 }
-variable "subnet-name2" {
-  
+variable "kubernetes_version" {
+  type = string
 }
-variable "security-group-name" {
-  
+variable "vpc_id" {
+  type = string
 }
-variable "rt-name2" {
-  
+variable "private_subnet_ids" {
+  type = list(string)
 }
-variable "cluster-name" {
-    default = "my_cluster"
+variable "node_instance_types" {
+  type = list(string)
 }
-variable "eksnode-group-name" {
-    default = "my_nodegrp"
+variable "node_desired_size" {
+  type = number
 }
-variable "iam-role-eks" {
-  default = "iam-role-eks"
+variable "node_min_size" {
+  description = "Minimum number of EKS nodes"
+  type        = number
 }
-variable "iam-policy-eks" {
-  default = "iam-policy-eks"
+variable "node_max_size" {
+  description = "Maximum number of EKS nodes"
+  type        = number
+}
+variable "cluster_role_arn" {
+  description = "IAM role ARN for EKS control plane"
+  type        = string
+}
+variable "node_role_arn" {
+  description = "IAM role ARN for EKS worker nodes"
+  type        = string
 }
