@@ -40,6 +40,19 @@ resource "aws_subnet" "private" {
     }
 }
 
+resource "aws_subnet" "database" {
+  count = length(var.availability_zones)
+  vpc_id = aws_vpc.this.id
+  availability_zone = var.availability_zones[count.index]
+  cidr_block = "10.0.${count.index + 21}.0/24"
+  tags = {
+   Name = "${var.project_name}-${var.environment}-database-${count.index + 1}"
+   Environment = var.environment
+   Project = var.project_name
+   Tier= "database" 
+  }
+}
+
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
   tags = {
@@ -105,4 +118,19 @@ resource "aws_route_table_association" "private" {
   count = length(var.availability_zones)
   subnet_id = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table" "database" {
+  vpc_id = aws_vpc.this.id
+  tags = {
+   Name= "${var.project_name}-${var.environment}-database-rt"
+   Environment= var.environment
+   Project = var.project_name 
+  }
+}
+
+resource "aws_route_table_association" "database" {
+  count = length(var.availability_zones)
+  subnet_id = aws_subnet.database[count.index].id
+  route_table_id = aws_route_table.database.id
 }

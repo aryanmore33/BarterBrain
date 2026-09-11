@@ -38,3 +38,7 @@ variable "node_role_arn" {
   description = "IAM role ARN for EKS worker nodes"
   type        = string
 }
+
+variable "node_security_group_id" {
+  type = string
+}

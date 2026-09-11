@@ -14,6 +14,19 @@ resource "aws_eks_cluster" "this" {
   }
 }
 
+resource "aws_launch_template" "eks_node" {
+  name = "${var.project_name}-${var.environment}-eks-node-template"
+  vpc_security_group_ids = [ var.node_security_group_id ]
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.project_name}-${var.environment}-eks-node"
+      Project = var.project_name
+      Environment = var.environment
+    }
+  }
+}
+
 resource "aws_eks_node_group" "this" {
   cluster_name = aws_eks_cluster.this.name
   node_group_name = "${var.project_name}-${var.environment}-nodes"
@@ -26,6 +39,10 @@ resource "aws_eks_node_group" "this" {
     max_size = var.node_max_size
   }
   capacity_type = "ON_DEMAND"
+  launch_template {
+    id = aws_launch_template.eks_node.id
+    version = aws_launch_template.eks_node.latest_version
+  }
   tags = {
    Name = "${var.project_name}-${var.environment}-eks-node"
    Project = var.project_name

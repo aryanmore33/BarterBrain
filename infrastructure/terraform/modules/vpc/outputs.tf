@@ -18,6 +18,11 @@ output "private_subnet_ids" {
   value       = aws_subnet.private[*].id
 }
 
+output "database_subnet_ids" {
+  description = "IDs of the database subnets"
+  value       = aws_subnet.database[*].id
+}
+
 output "availability_zones" {
   description = "Availability zones"
   value       = var.availability_zones
