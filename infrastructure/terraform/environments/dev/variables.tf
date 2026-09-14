@@ -54,3 +54,14 @@ variable "node_max_size" {
  type = number
  default = 3
 }
+
+variable "database_name" {
+  type    = string
+}
+variable "database_username" {
+  type    = string
+}
+variable "database_password" {
+  type      = string
+  sensitive = true
+}

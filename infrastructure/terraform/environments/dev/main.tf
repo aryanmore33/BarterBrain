@@ -37,3 +37,18 @@ module "security_groups" {
   environment = var.environment
   vpc_id = module.vpc.vpc_id
 }
+
+module "rds" {
+  source = "../../modules/rds"
+  project_name = var.project_name
+  environment = var.environment
+  vpc_id = module.vpc.vpc_id
+  database_subnet_ids = module.vpc.database_subnet_ids
+  security_group_id = module.security_groups.rds_security_group_id
+  database_name = var.database_name
+  database_username = var.database_username
+  database_password = var.database_password
+  engine_version = "17"
+  instance_class = "db.t3.micro"
+  allocated_storage = 20
+}

@@ -47,3 +47,17 @@ output "rds_security_group_id" {
 output "redis_security_group_id" {
   value       = module.security_groups.redis_security_group_id
 }
+
+
+output "rds_instance_id" {
+  value       = module.rds.db_instance_id
+}
+output "rds_endpoint" {
+  value       = module.rds.db_endpoint
+}
+output "rds_port" {
+  value       = module.rds.db_port
+}
+output "rds_database_name" {
+  value       = module.rds.db_name
+}
