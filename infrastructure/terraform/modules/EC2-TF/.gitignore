@@ -1,9 +1,0 @@
-/terraKeys
-
-.terraform/
-
-*.tfstate
-*.tfstate.*
-
-*.swp
-*.zip

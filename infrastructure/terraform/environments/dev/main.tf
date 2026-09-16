@@ -52,3 +52,29 @@ module "rds" {
   instance_class = "db.t3.micro"
   allocated_storage = 20
 }
+
+module "elasticache" {
+  source = "../../modules/elasticache"
+  project_name = var.project_name
+  environment = var.environment
+  subnet_ids = module.vpc.database_subnet_ids
+  security_group_id = module.security_groups.redis_security_group_id
+  node_type = var.redis_node_type
+  engine_version = var.redis_engine_version
+  auth_token = var.redis_auth_token
+}
+
+module "s3" {
+  source = "../../modules/s3"
+  project_name = var.project_name
+  environment = var.environment
+}
+
+module "cloudfront" {
+  source = "../../modules/cloudfront"
+  project_name = var.project_name
+  environment = var.environment
+  bucket_id = module.s3.bucket_id
+  bucket_arn = module.s3.bucket_arn
+  bucket_regional_domain_name = module.s3.bucket_regional_domain_name
+}

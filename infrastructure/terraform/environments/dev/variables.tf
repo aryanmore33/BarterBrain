@@ -65,3 +65,19 @@ variable "database_password" {
   type      = string
   sensitive = true
 }
+
+variable "redis_node_type" {
+  description = "ElastiCache Redis node type"
+  type        = string
+  default     = "cache.t3.micro"
+}
+variable "redis_engine_version" {
+  description = "ElastiCache Redis engine version"
+  type        = string
+  default     = "7.1"
+}
+variable "redis_auth_token" {
+  description = "Authentication token for Redis"
+  type        = string
+  sensitive   = true
+}

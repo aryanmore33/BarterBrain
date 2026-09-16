@@ -45,19 +45,45 @@ output "rds_security_group_id" {
   value = module.security_groups.rds_security_group_id
 }
 output "redis_security_group_id" {
-  value       = module.security_groups.redis_security_group_id
+  value = module.security_groups.redis_security_group_id
 }
 
 
 output "rds_instance_id" {
-  value       = module.rds.db_instance_id
+  value = module.rds.db_instance_id
 }
 output "rds_endpoint" {
-  value       = module.rds.db_endpoint
+  value = module.rds.db_endpoint
 }
 output "rds_port" {
-  value       = module.rds.db_port
+  value = module.rds.db_port
 }
 output "rds_database_name" {
-  value       = module.rds.db_name
+  value = module.rds.db_name
+}
+
+output "redis_replication_group_id" {
+  description = "ElastiCache Redis replication group ID"
+  value = module.elasticache.redis_replication_group_id
+}
+output "redis_primary_endpoint" {
+  description = "ElastiCache Redis primary endpoint"
+  value = module.elasticache.redis_primary_endpoint
+}
+output "redis_port" {
+  description = "ElastiCache Redis port"
+  value = module.elasticache.redis_port
+}
+
+output "frontend_bucket_name" {
+  value = module.s3.bucket_name
+}
+output "frontend_bucket_arn" {
+  value = module.s3.bucket_arn
+}
+output "cloudfront_distribution_id" {
+  value = module.cloudfront.distribution_id
+}
+output "cloudfront_domain_name" {
+  value = module.cloudfront.distribution_domain_name
 }
