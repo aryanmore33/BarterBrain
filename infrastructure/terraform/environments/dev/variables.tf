@@ -40,19 +40,19 @@ variable "kubernetes_version" {
 }
 variable "node_instance_types" {
   type = list(string)
-  default = [ "t3.medium" ]
+  default = [ "t3.micro" ]
 }
 variable "node_desired_size" {
   type = number
-  default = 2
+  default = 1
 }
 variable "node_min_size" {
   type = number
-  default = 2
+  default = 1
 }
 variable "node_max_size" {
  type = number
- default = 3
+ default = 1
 }
 
 variable "database_name" {
@@ -80,4 +80,9 @@ variable "redis_auth_token" {
   description = "Authentication token for Redis"
   type        = string
   sensitive   = true
+}
+
+variable "enable_cloudfront" {
+  type = bool
+  default = false
 }

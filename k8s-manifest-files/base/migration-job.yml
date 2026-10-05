@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: barterbrain-db-migration
+  namespace: development
+spec:
+  backoffLimit: 3
+
+  template:
+    metadata:
+      labels:
+        app: barterbrain-db-migration
+
+    spec:
+      restartPolicy: Never
+      containers:
+        -name: migration
+        image: IMAGE_URI
+        command:
+          - /bin/sh
+          - -c
+          - npm run migrate
+        envFrom:
+          -configMapRef: 
+            name: barterbrain-backend-config
+          -secretRef:
+            name: barterbrain-backend-secret

@@ -22,3 +22,8 @@ variable "bucket_regional_domain_name" {
   description = "S3 regional domain name"
   type        = string
 }
+
+variable "enable_cloudfront" {
+  type = bool
+  # default = false
+}

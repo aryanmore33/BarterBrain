@@ -71,10 +71,12 @@ module "s3" {
 }
 
 module "cloudfront" {
+  count = var.enable_cloudfront ? 1 : 0
   source = "../../modules/cloudfront"
   project_name = var.project_name
   environment = var.environment
   bucket_id = module.s3.bucket_id
   bucket_arn = module.s3.bucket_arn
   bucket_regional_domain_name = module.s3.bucket_regional_domain_name
+  enable_cloudfront = var.enable_cloudfront
 }

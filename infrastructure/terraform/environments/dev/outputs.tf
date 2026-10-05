@@ -82,8 +82,10 @@ output "frontend_bucket_arn" {
   value = module.s3.bucket_arn
 }
 output "cloudfront_distribution_id" {
-  value = module.cloudfront.distribution_id
+  description = "CloudFront distribution ID"
+  value       = var.enable_cloudfront ? module.cloudfront[0].distribution_id : null
 }
 output "cloudfront_domain_name" {
-  value = module.cloudfront.distribution_domain_name
+  description = "CloudFront distribution domain name"
+  value       = var.enable_cloudfront ? module.cloudfront[0].distribution_domain_name : null
 }

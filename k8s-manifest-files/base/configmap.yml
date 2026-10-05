@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: barterbrain-backend-config
+  namespace: barterbrain-dev
+
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  LOG_LEVEL: "info"
+  CORS_ORIGIN: "http://localhost:5173"
+  CLIENT_URL: "http://localhost:5173"
+  REDIS_PORT: "6379"

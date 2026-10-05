@@ -1,35 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: barterbrain-api
-  namespace: barterbrain
+  name: barterbrain-backend
+  namespace: barterbrain-dev
   labels:
-    app: barterbrain-api
+    app: barterbrain-backend
+    project: barterbrain
 spec:
-  replicas: 2
+  replicas: 1
 
   selector:
     matchLabels:
-      app: barterbrain-api
+      app: barterbrain-backend
 
   template:
     metadata:
       labels:
-        app: barterbrain-api
+        app: barterbrain-backend
+        project: barterbrain
 
     spec:
       containers:
         - name: backend
           image: IMAGE_URI
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
 
           ports:
             - containerPort: 3000
-              name: http
+              protocol: TCP
 
           envFrom:
+            - configMapRef:
+                name: barterbrain-backend-config
+
             - secretRef:
-                name: barterbrain-api-env
+                name: barterbrain-backend-secret
 
           readinessProbe:
             httpGet:
@@ -52,19 +57,31 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: barterbrain-api
-  namespace: barterbrain
+  name: barterbrain-backend-service
+  namespace: barterbrain-dev
+  labels:
+    app: barterbrain-backend
+    project: barterbrain
+
 spec:
+  type: ClusterIP
+
   selector:
-    app: barterbrain-api
+    app: barterbrain-backend
 
   ports:
     - name: http
-      port: 80
+      protocol: TCP
+      port: 3000
       targetPort: 3000
-
-  type: ClusterIP
