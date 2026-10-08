@@ -12,6 +12,8 @@ module "iam" {
   source       = "../../modules/iam"
   project_name = var.project_name
   environment  = var.environment
+  oidc_provider_arn = aws_iam_openid_connect_provider.eks.arn
+  oidc_issuer_url   = module.eks.oidc_issuer_url
 }
 
 module "eks" {
@@ -79,4 +81,19 @@ module "cloudfront" {
   bucket_arn = module.s3.bucket_arn
   bucket_regional_domain_name = module.s3.bucket_regional_domain_name
   enable_cloudfront = var.enable_cloudfront
+}
+
+# tls -- Helps securely verify the OIDC provider
+data "tls_certificate" "eks_oidc" {
+  url = module.eks.oidc_issuer_url
+}
+resource "aws_iam_openid_connect_provider" "eks" {
+  url = module.eks.oidc_issuer_url
+  client_id_list = [ "sts.amazonaws.com" ]
+  thumbprint_list = [ data.tls_certificate.eks_oidc.certificates[0].sha1_fingerprint ]
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-eks-oidc"
+    Project     = var.project_name
+    Environment = var.environment
+  }
 }

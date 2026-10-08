@@ -34,6 +34,9 @@ output "eks_cluster_endpoint" {
 output "eks_node_group_name" {
   value = module.eks.node_group_name
 }
+# output "aws_load_balancer_controller_role_arn" {
+#   value = module.iam.aws_load_balancer_controller_role_arn
+# }
 
 output "alb_security_group_id" {
   value = module.security_groups.alb_security_group_id
@@ -89,3 +92,4 @@ output "cloudfront_domain_name" {
   description = "CloudFront distribution domain name"
   value       = var.enable_cloudfront ? module.cloudfront[0].distribution_domain_name : null
 }
+

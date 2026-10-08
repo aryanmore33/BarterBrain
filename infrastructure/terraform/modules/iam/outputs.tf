@@ -17,3 +17,13 @@ output "eks_node_role_name" {
   description = "IAM role name for EKS worker nodes"
   value       = aws_iam_role.eks_node.name
 }
+
+output "oidc_provider_arn" {
+  description = "ARN of the EKS IAM OIDC provider"
+  value       = var.oidc_provider_arn
+}
+
+output "oidc_issuer_url" {
+  description = "OIDC issuer URL of the EKS cluster"
+  value       = var.oidc_issuer_url
+}

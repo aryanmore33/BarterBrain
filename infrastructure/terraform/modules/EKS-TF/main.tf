@@ -49,3 +49,12 @@ resource "aws_eks_node_group" "this" {
    Environment = var.environment 
   }
 }
+
+resource "aws_vpc_security_group_ingress_rule" "eks_node_from_cluster_webhook" {
+  security_group_id = var.node_security_group_id
+  from_port = 9443
+  to_port = 9443
+  ip_protocol = "tcp"
+  referenced_security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  description = "Allow EKS control plane to reach AWS Load Balancer Controller webhook"
+}
