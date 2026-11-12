@@ -82,26 +82,3 @@ resource "aws_vpc_security_group_egress_rule" "rds_all" { # outbound rules
   ip_protocol = "-1"
 }
 
-# REDIS / ELASTICACHE SECURITY GROUP
-resource "aws_security_group" "redis" {
-  name = "${var.project_name}-${var.environment}-redis-sg"
-  vpc_id = var.vpc_id
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-redis-sg"
-    Project     = var.project_name
-    Environment = var.environment
-    Tier        = "database"
-  }
-}
-resource "aws_vpc_security_group_ingress_rule" "redis" { # EKS -> Redis
-  security_group_id = aws_security_group.redis.id
-  referenced_security_group_id = aws_security_group.eks_node.id
-  from_port = 6379
-  to_port = 6379
-  ip_protocol = "tcp"
-}
-resource "aws_vpc_security_group_egress_rule" "redis_all" { # Redis outbound
-  security_group_id = aws_security_group.redis.id
-  cidr_ipv4 = "0.0.0.0/0"
-  ip_protocol = "-1"
-}

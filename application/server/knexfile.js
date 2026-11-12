@@ -10,7 +10,7 @@ module.exports = {
     connection: {
       connectionString: process.env.DATABASE_URL,
       ssl: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     },
     pool: {
@@ -27,7 +27,7 @@ module.exports = {
     connection: {
       connectionString: process.env.DATABASE_URL,
       ssl: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     },
     pool: {
@@ -44,7 +44,7 @@ module.exports = {
     connection: {
       connectionString: process.env.DATABASE_URL,
       ssl: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     },
     pool: {

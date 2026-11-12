@@ -1,0 +1,7 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: barterbrain-backend-ingress
+  namespace: barterbrain-dev
+  annotations:
+    alb.ingress.kubernetes.io/security-groups: "${ALB_SECURITY_GROUP_ID}"

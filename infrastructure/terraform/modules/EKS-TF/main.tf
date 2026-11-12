@@ -6,6 +6,7 @@ resource "aws_eks_cluster" "this" {
     subnet_ids = var.private_subnet_ids
     endpoint_private_access = true
     endpoint_public_access = true
+    public_access_cidrs = var.public_access_cidrs
   }
   tags = {
     Name = var.cluster_name
@@ -16,7 +17,12 @@ resource "aws_eks_cluster" "this" {
 
 resource "aws_launch_template" "eks_node" {
   name = "${var.project_name}-${var.environment}-eks-node-template"
-  vpc_security_group_ids = [ var.node_security_group_id ]
+  # Supplying custom security groups prevents EKS from automatically adding
+  # the cluster security group. Attach both so nodes can communicate with the control plane.
+  vpc_security_group_ids = [
+    var.node_security_group_id,
+    aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  ]
   tag_specifications {
     resource_type = "instance"
     tags = {

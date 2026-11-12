@@ -2,13 +2,15 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: barterbrain-backend-ingress
-  namespace: development
+  namespace: barterbrain-dev
 
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
 
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    # alb.ingress.kubernetes.io/certificate-arn: ACM_CERTIFICATE_ARN
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
 
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/healthcheck-port: "3000"
@@ -16,10 +18,10 @@ metadata:
     alb.ingress.kubernetes.io/backend-protocol: HTTP
 
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=120
+    alb.ingress.kubernetes.io/security-groups: "${ALB_SECURITY_GROUP_ID}"
 
 spec:
   ingressClassName: alb
-
   rules:
     - http:
         paths:

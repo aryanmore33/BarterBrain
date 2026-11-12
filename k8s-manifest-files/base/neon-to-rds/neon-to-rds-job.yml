@@ -1,0 +1,300 @@
+
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: neon-to-rds-migration
+  namespace: barterbrain-dev
+  labels:
+    app: barterbrain
+    component: database-migration
+
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  # ttlSecondsAfterFinished: 86400
+
+  template:
+    metadata:
+      labels:
+        app: barterbrain
+        component: database-migration
+
+    spec:
+      restartPolicy: Never
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: neon-to-rds
+          image: postgres:17.11-alpine
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+
+              DUMP_FILE="/tmp/barterbrain-neon.dump"
+
+              echo "======================================"
+              echo " NEON TO RDS MIGRATION"
+              echo "======================================"
+
+              echo ""
+              echo "STEP 1: Checking PostgreSQL client"
+
+              pg_dump --version
+              pg_restore --version
+
+              echo ""
+              echo "STEP 2: Checking source database"
+
+              SOURCE_TABLE_COUNT=$(
+                psql "$SOURCE_DATABASE_URL" \
+                  -X -A -t -v ON_ERROR_STOP=1 \
+                  -c "
+                    SELECT count(*)
+                    FROM pg_tables
+                    WHERE schemaname = 'public';
+                  "
+              )
+
+              echo "Source application tables: $SOURCE_TABLE_COUNT"
+              if [ "$SOURCE_TABLE_COUNT" -eq 0 ]; then
+                echo "ERROR: Neon has no public tables; refusing to continue."
+                exit 1
+              fi
+
+              echo ""
+              echo "STEP 3: Checking destination database"
+
+              TARGET_TABLE_COUNT=$(
+                psql \
+                  -X -A -t -v ON_ERROR_STOP=1 \
+                  -c "
+                    SELECT count(*)
+                    FROM pg_tables
+                    WHERE schemaname = 'public';
+                  "
+              )
+
+              echo "Existing RDS application tables: $TARGET_TABLE_COUNT"
+
+              if [ "$TARGET_TABLE_COUNT" -ne 0 ]; then
+
+                echo ""
+                echo "RDS already contains tables."
+                echo "Checking whether its data matches Neon..."
+
+                if [ "$TARGET_TABLE_COUNT" -ne "$SOURCE_TABLE_COUNT" ]; then
+                  echo "ERROR: Source and destination table counts differ."
+                  exit 1
+                fi
+
+                SOURCE_TABLES=$(
+                  psql "$SOURCE_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 \
+                    -c "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"
+                )
+
+                TARGET_TABLES=$(
+                  psql -X -A -t -v ON_ERROR_STOP=1 \
+                    -c "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"
+                )
+
+                if [ "$SOURCE_TABLES" != "$TARGET_TABLES" ]; then
+                  echo "ERROR: Source and destination table names differ."
+                  exit 1
+                fi
+
+                for TABLE in $SOURCE_TABLES; do
+
+                  SOURCE_ROWS=$(
+                    psql "$SOURCE_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 \
+                      -c "SELECT count(*) FROM public.\"$TABLE\""
+                  )
+
+                  TARGET_ROWS=$(
+                    psql -X -A -t -v ON_ERROR_STOP=1 \
+                      -c "SELECT count(*) FROM public.\"$TABLE\""
+                  )
+
+                  echo "$TABLE: Neon=$SOURCE_ROWS RDS=$TARGET_ROWS"
+
+                  if [ "$SOURCE_ROWS" -ne "$TARGET_ROWS" ]; then
+                    echo "ERROR: Row count mismatch in $TABLE"
+                    exit 1
+                  fi
+
+                done
+
+                echo ""
+                echo "RDS data matches Neon table and row counts."
+                psql -X -v ON_ERROR_STOP=1 -c \
+                  "CREATE SCHEMA IF NOT EXISTS barterbrain_internal;
+                   CREATE TABLE IF NOT EXISTS barterbrain_internal.bootstrap_status
+                     (id integer PRIMARY KEY CHECK (id = 1), completed_at timestamptz NOT NULL);
+                   INSERT INTO barterbrain_internal.bootstrap_status (id, completed_at)
+                     VALUES (1, now()) ON CONFLICT (id) DO UPDATE SET completed_at = EXCLUDED.completed_at;"
+                echo "Skipping database restore."
+                echo "DATABASE VALIDATION SUCCESSFUL"
+                exit 0
+
+              fi
+
+              echo "RDS is empty. Proceeding with fresh Neon restore."
+              
+
+              echo ""
+              echo "STEP 4: Creating Neon backup"
+
+              pg_dump \
+                --dbname="$SOURCE_DATABASE_URL" \
+                --format=custom \
+                --no-owner \
+                --no-acl \
+                --file="$DUMP_FILE"
+
+              echo "Backup created successfully."
+
+              echo ""
+              echo "STEP 5: Validating backup archive"
+
+              pg_restore --list "$DUMP_FILE" >/dev/null
+
+              DUMP_SIZE=$(du -h "$DUMP_FILE" | cut -f1)
+
+              echo "Backup size: $DUMP_SIZE"
+              echo "Archive validation successful."
+
+              echo ""
+              echo "STEP 6: Restoring into RDS"
+
+              pg_restore \
+                --dbname="host=$PGHOST port=$PGPORT dbname=$PGDATABASE user=$PGUSER sslmode=$PGSSLMODE" \
+                --no-owner \
+                --no-acl \
+                --single-transaction \
+                --exit-on-error \
+                "$DUMP_FILE"
+
+              echo ""
+              echo "STEP 7: Checking restored tables"
+
+              RESTORED_TABLE_COUNT=$(
+                psql \
+                  -X -A -t -v ON_ERROR_STOP=1 \
+                  -c "
+                    SELECT count(*)
+                    FROM pg_tables
+                    WHERE schemaname = 'public';
+                  "
+              )
+
+              echo "Restored application tables: $RESTORED_TABLE_COUNT"
+
+              if [ "$RESTORED_TABLE_COUNT" -ne "$SOURCE_TABLE_COUNT" ]; then
+                echo "ERROR: Source and destination table counts differ."
+                exit 1
+              fi
+
+              echo ""
+              echo "STEP 8: Comparing row counts table by table"
+              TABLES=$(psql "$SOURCE_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c \
+                "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")
+              for TABLE in $TABLES; do
+                SOURCE_ROWS=$(psql "$SOURCE_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 \
+                  -c "SELECT count(*) FROM public.\"$TABLE\"")
+                TARGET_ROWS=$(psql -X -A -t -v ON_ERROR_STOP=1 \
+                  -c "SELECT count(*) FROM public.\"$TABLE\"")
+                echo "$TABLE: source=$SOURCE_ROWS target=$TARGET_ROWS"
+                if [ "$SOURCE_ROWS" -ne "$TARGET_ROWS" ]; then
+                  echo "ERROR: Row count differs for $TABLE"
+                  exit 1
+                fi
+              done
+
+              psql -X -v ON_ERROR_STOP=1 -c \
+                "CREATE SCHEMA IF NOT EXISTS barterbrain_internal;
+                 CREATE TABLE IF NOT EXISTS barterbrain_internal.bootstrap_status
+                   (id integer PRIMARY KEY CHECK (id = 1), completed_at timestamptz NOT NULL);
+                 INSERT INTO barterbrain_internal.bootstrap_status (id, completed_at)
+                   VALUES (1, now()) ON CONFLICT (id) DO UPDATE SET completed_at = EXCLUDED.completed_at;"
+
+              echo ""
+              echo "======================================"
+              echo " DATABASE RESTORE COMPLETED"
+              echo "======================================"
+
+              echo "Source tables: $SOURCE_TABLE_COUNT"
+              echo "Destination tables: $RESTORED_TABLE_COUNT"
+
+              echo "Neon database remains unchanged."
+
+          env:
+            - name: SOURCE_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: neon-to-rds-migration
+                  key: SOURCE_DATABASE_URL
+
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGHOST
+
+            - name: PGPORT
+              value: "5432"
+
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGDATABASE
+
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGUSER
+
+            - name: PGSSLMODE
+              value: "require"
+
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGPASSWORD
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: migration-storage
+              mountPath: /tmp
+
+      volumes:
+        - name: migration-storage
+          emptyDir:
+            sizeLimit: 1Gi

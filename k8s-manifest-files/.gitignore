@@ -1,1 +1,4 @@
 /base/secret.yaml
+/base/rds-secret.yml
+/base/neon-to-rds-secret.yaml
+/base/neon-to-rds/neon-to-rds-secret.yml

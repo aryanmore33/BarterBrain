@@ -1,0 +1,125 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rds-connectivity-check
+  namespace: barterbrain-dev
+  labels:
+    app: barterbrain
+    component: database-check
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  ttlSecondsAfterFinished: 3600
+
+  template:
+    metadata:
+      labels:
+        app: barterbrain
+        component: database-check
+    spec:
+      restartPolicy: Never
+
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: postgres-client
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGHOST
+
+            - name: PGPORT
+              value: "5432"
+
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGDATABASE
+
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGUSER
+
+            - name: PGSSLMODE
+              value: "require"
+
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGPASSWORD
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+
+              echo "========== RDS CONNECTION CHECK =========="
+
+              psql -X -v ON_ERROR_STOP=1 <<'SQL'
+
+              \echo '========== DATABASE VERSION =========='
+
+              SELECT current_database(),
+                     current_user,
+                     current_setting('server_version');
+
+              \echo '========== DATABASE SIZE =========='
+
+              SELECT pg_size_pretty(
+                  pg_database_size(current_database())
+              ) AS database_size;
+
+              \echo '========== APPLICATION SCHEMAS =========='
+
+              SELECT schema_name
+              FROM information_schema.schemata
+              WHERE schema_name NOT IN ('information_schema')
+                AND schema_name NOT LIKE 'pg_%'
+              ORDER BY schema_name;
+
+              \echo '========== EXISTING TABLES =========='
+
+              SELECT schemaname, tablename
+              FROM pg_tables
+              WHERE schemaname NOT IN ('information_schema')
+                AND schemaname NOT LIKE 'pg_%'
+              ORDER BY schemaname, tablename;
+
+              \echo '========== PUBLIC TABLE COUNT =========='
+
+              SELECT count(*) AS existing_application_tables
+              FROM pg_tables
+              WHERE schemaname = 'public';
+
+              SQL
+
+              echo "========== RDS CHECK COMPLETED =========="
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 70
+            runAsGroup: 70
+            capabilities:
+              drop:
+                - ALL

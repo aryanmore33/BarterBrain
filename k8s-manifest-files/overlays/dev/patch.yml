@@ -2,5 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: barterbrain-backend
-spec:
-  replicas: 1
+  namespace: barterbrain-dev
+# spec:
+#   replicas: 1

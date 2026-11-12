@@ -36,11 +36,11 @@ variable "cluster_name" {
 }
 variable "kubernetes_version" {
   type = string
-  default = "1.33"
+  default = "1.36"
 }
 variable "node_instance_types" {
   type = list(string)
-  default = [ "t3.micro" ]
+  default = [ "t3.small" ]
 }
 variable "node_desired_size" {
   type = number
@@ -54,6 +54,10 @@ variable "node_max_size" {
  type = number
  default = 1
 }
+variable "eks_public_access_cidrs" {
+  description = "Public IPv4 CIDRs allowed to reach the EKS API endpoint"
+  type        = list(string)
+}
 
 variable "database_name" {
   type    = string
@@ -66,23 +70,7 @@ variable "database_password" {
   sensitive = true
 }
 
-variable "redis_node_type" {
-  description = "ElastiCache Redis node type"
-  type        = string
-  default     = "cache.t3.micro"
-}
-variable "redis_engine_version" {
-  description = "ElastiCache Redis engine version"
-  type        = string
-  default     = "7.1"
-}
-variable "redis_auth_token" {
-  description = "Authentication token for Redis"
-  type        = string
-  sensitive   = true
-}
-
 variable "enable_cloudfront" {
   type = bool
-  default = false
+  default = true
 }

@@ -139,3 +139,6 @@ src/
 └── pages/
       ChatPage.tsx
       MeetingPage.tsx
+
+
+Frontend CloudFront HTTPS se HTTP ALB API ko directly call nahi kar sakta. Ingress ke through backend apne ALB hostname par HTTP se accessible hoga, lekin CloudFront frontend us HTTP URL ko use karega to browser mixed-content request block karega. Bina domain/ACM ke bhi frontend ko backend se jodne ke liye baad mein CloudFront par ALB origin aur API/Socket.IO behaviors configure karne honge. Abhi backend + HTTP ALB deploy ho sakte hain; CloudFront page publish hogi, par browser API/socket functionality ke liye proxy configuration abhi nahi hai.

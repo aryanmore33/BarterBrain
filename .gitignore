@@ -1,0 +1,5 @@
+# Local deployment credentials and Terraform inputs
+scripts/dev-secrets.env
+infrastructure/terraform/environments/dev/variables.tfvars
+infrastructure/terraform/environments/dev/*.tfplan
+

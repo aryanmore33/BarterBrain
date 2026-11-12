@@ -1,0 +1,1045 @@
+
+========== Verify AWS and Docker ==========
+
+========== Build backend image ==========
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from dockerfile
+#1 transferring dockerfile: 966B 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/node:24.20.0-alpine3.24
+#2 ...
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:24.20.0-alpine3.24
+#2 DONE 2.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 154B 0.1s done
+#4 DONE 0.1s
+
+#5 [dependencies 1/4] FROM docker.io/library/node:24.20.0-alpine3.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+#5 resolve docker.io/library/node:24.20.0-alpine3.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 5.22kB 0.9s done
+#6 DONE 0.9s
+
+#7 [dependencies 4/4] RUN npm ci --omit=dev
+#7 CACHED
+
+#8 [production 6/7] COPY --from=dependencies /server/node_modules ./node_modules
+#8 CACHED
+
+#9 [dependencies 3/4] COPY package*.json ./
+#9 CACHED
+
+#10 [production 3/7] COPY rds-ca-bundle.pem /etc/ssl/certs/rds-ca-bundle.pem
+#10 CACHED
+
+#11 [production 5/7] RUN rm -rf     /usr/local/lib/node_modules/npm     /usr/local/lib/node_modules/corepack     /usr/local/bin/npm     /usr/local/bin/npx     /usr/local/bin/corepack
+#11 CACHED
+
+#12 [dependencies 2/4] WORKDIR /server
+#12 CACHED
+
+#13 [production 4/7] RUN apk update && apk upgrade
+#13 CACHED
+
+#14 [production 7/7] COPY . .
+#14 CACHED
+
+#15 exporting to image
+#15 exporting layers done
+#15 exporting manifest sha256:be90605f9ac60def432d512264faee76f05c34a939b27da56a3f23e794d217f5 done
+#15 exporting config sha256:28cce892535d389ee88bf24b905bff4f7d93ece26e5af453f5eb770550a2e76f done
+#15 exporting attestation manifest sha256:cf82b62e0be413b65dcf2cdc4fcffda3df077ae7a47a370a7272b69c93adeeaf 0.0s done
+#15 exporting manifest list sha256:a184cea82cf9c44794bda79a1a7c79fa4150b89a4b8d7aba826224ac41b991d6
+#15 exporting manifest list sha256:a184cea82cf9c44794bda79a1a7c79fa4150b89a4b8d7aba826224ac41b991d6 0.0s done
+#15 naming to docker.io/aryanmore33/barterbrain-backend:1.0.5 done
+#15 unpacking to docker.io/aryanmore33/barterbrain-backend:1.0.5 0.0s done
+#15 DONE 0.1s
+
+========== Initialize Terraform ==========
+[0m[1mInitializing the backend...[0m
+
+[0m[1mInitializing modules...[0m
+
+[0m[1mInitializing provider plugins...[0m
+- Reusing previous version of hashicorp/tls from the dependency lock file
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/tls v4.4.1
+- Using previously-installed hashicorp/aws v6.63.0
+
+
+[0m[1m[32mTerraform has been successfully initialized![0m[32m[0m
+[0m[32m
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.[0m
+
+========== Create and review Terraform plan ==========
+[0m[1mmodule.cloudfront[0].aws_cloudfront_origin_access_control.this: Refreshing state... [id=EYVRHNPWBV6LY][0m
+[0m[1mmodule.iam-eks.aws_iam_role.eks_node: Refreshing state... [id=barterbrain-dev-eks-node-role][0m
+[0m[1mmodule.iam-eks.aws_iam_role.eks_cluster: Refreshing state... [id=barterbrain-dev-eks-cluster-role][0m
+[0m[1mmodule.vpc.aws_vpc.this: Refreshing state... [id=vpc-0d17c245abc27a3db][0m
+[0m[1mmodule.iam-lbc.aws_iam_policy.aws_load_balancer_controller: Refreshing state... [id=arn:aws:iam::060245184105:policy/barterbrain-dev-AWSLoadBalancerControllerPolicy][0m
+[0m[1mmodule.vpc.aws_eip.nat: Refreshing state... [id=eipalloc-0ed1402f568aa4d1b][0m
+[0m[1mmodule.s3.aws_s3_bucket.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=060245184105][0m
+[0m[1mmodule.vpc.aws_internet_gateway.this: Refreshing state... [id=igw-0bb5495182cfcda5c][0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-097e91eac6eefefd3][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-03eaccd955b129c26][0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Refreshing state... [id=subnet-01b6581b62d62e851][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0a10d219df93c25ca][0m
+[0m[1mmodule.security_groups.aws_security_group.eks_node: Refreshing state... [id=sg-01892250e92211eae][0m
+[0m[1mmodule.vpc.aws_route_table.database: Refreshing state... [id=rtb-09112a09f4fa317a3][0m
+[0m[1mmodule.vpc.aws_subnet.database[0]: Refreshing state... [id=subnet-0c70c2cfc6c1e455d][0m
+[0m[1mmodule.vpc.aws_subnet.database[1]: Refreshing state... [id=subnet-0ecd9cb34fdbcd3f3][0m
+[0m[1mmodule.security_groups.aws_security_group.alb: Refreshing state... [id=sg-08113af14fbf3f4d0][0m
+[0m[1mmodule.vpc.aws_route_table.public: Refreshing state... [id=rtb-00f50f5364d756d34][0m
+[0m[1mmodule.security_groups.aws_security_group.rds: Refreshing state... [id=sg-0ff570a6c0ef7dc67][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.s3.aws_s3_bucket_ownership_controls.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.vpc.aws_nat_gateway.this: Refreshing state... [id=nat-04dbfce4ebd65e241][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_egress_rule.eks_node_all: Refreshing state... [id=sgr-098b6ec7c48e80961][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.eks_node_self: Refreshing state... [id=sgr-0b2f3d26f32ef7952][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-0d4beb6caabb11678][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-0eab893dbab710fb7][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_egress_rule.alb_all: Refreshing state... [id=sgr-01d31a5ad13fb9c48][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.eks_node_alb: Refreshing state... [id=sgr-026e25f9b9ac091a5][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.alb_https: Refreshing state... [id=sgr-02501c943abed02e8][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.alb_http: Refreshing state... [id=sgr-0e5f88a3262cb847d][0m
+[0m[1mmodule.vpc.aws_route_table_association.database[1]: Refreshing state... [id=rtbassoc-0af8d33948a394166][0m
+[0m[1mmodule.vpc.aws_route_table_association.database[0]: Refreshing state... [id=rtbassoc-0fddf7d737c892a50][0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Refreshing state... [id=E39L3XPKA2E9BG][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_egress_rule.rds_all: Refreshing state... [id=sgr-09bb0c4a98f3d766c][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.rds_postgres: Refreshing state... [id=sgr-00d31ecf7794897a0][0m
+[0m[1mmodule.vpc.aws_route_table.private: Refreshing state... [id=rtb-014ee9c8291d6ac89][0m
+[0m[1mmodule.rds.aws_db_subnet_group.this: Refreshing state... [id=barterbrain-dev-db-subnet-group][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-0de45323890235538][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-06f0241deb67b297e][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_ecr_pull: Refreshing state... [id=barterbrain-dev-eks-node-role/arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_worker_node: Refreshing state... [id=barterbrain-dev-eks-node-role/arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_cluster: Refreshing state... [id=barterbrain-dev-eks-cluster-role/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_cni: Refreshing state... [id=barterbrain-dev-eks-node-role/arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy][0m
+[0m[1mmodule.eks.aws_eks_cluster.this: Refreshing state... [id=barterbrain-dev-eks][0m
+[0m[1mdata.tls_certificate.eks_oidc: Reading...[0m[0m
+[0m[1mmodule.eks.aws_vpc_security_group_ingress_rule.eks_node_from_cluster_webhook: Refreshing state... [id=sgr-0275ad04816b45cc8][0m
+[0m[1mmodule.eks.aws_launch_template.eks_node: Refreshing state... [id=lt-00bd5040696274cd5][0m
+[0m[1mmodule.rds.aws_db_instance.this: Refreshing state... [id=db-C2OKHZ64VCR63N2N7AXRQ3OCGE][0m
+[0m[1mmodule.cloudfront[0].aws_s3_bucket_policy.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.eks.aws_eks_node_group.this: Refreshing state... [id=barterbrain-dev-eks:barterbrain-dev-nodes][0m
+[0m[1mdata.tls_certificate.eks_oidc: Read complete after 0s [id=1e3a331631939a1ae4a625cd4244a4963dabbfa2][0m
+[0m[1maws_iam_openid_connect_provider.eks: Refreshing state... [id=arn:aws:iam::060245184105:oidc-provider/oidc.eks.ap-south-1.amazonaws.com/id/CED0E15EE2115A48AD1A804E90EBD934][0m
+[0m[1mmodule.iam-lbc.data.aws_iam_policy_document.aws_load_balancer_controller_assume_role: Reading...[0m[0m
+[0m[1mmodule.iam-lbc.data.aws_iam_policy_document.aws_load_balancer_controller_assume_role: Read complete after 0s [id=555438857][0m
+[0m[1mmodule.iam-lbc.aws_iam_role.aws_load_balancer_controller: Refreshing state... [id=barterbrain-dev-aws-load-balancer-controller][0m
+[0m[1mmodule.iam-lbc.aws_iam_role_policy_attachment.aws_load_balancer_controller: Refreshing state... [id=barterbrain-dev-aws-load-balancer-controller/arn:aws:iam::060245184105:policy/barterbrain-dev-AWSLoadBalancerControllerPolicy][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.cloudfront[0].aws_cloudfront_distribution.this[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_cloudfront_distribution" "this" {
+        id                              = "E39L3XPKA2E9BG"
+        tags                            = {
+            "Environment" = "dev"
+            "Name"        = "barterbrain-dev-cloudfront"
+            "Project"     = "barterbrain"
+            "Tier"        = "frontend"
+        }
+        [90m# (25 unchanged attributes hidden)[0m[0m
+
+      [33m~[0m[0m viewer_certificate {
+          [33m~[0m[0m minimum_protocol_version       = "TLSv1" [33m->[0m[0m "TLSv1.2_2021"
+            [90m# (4 unchanged attributes hidden)[0m[0m
+        }
+
+        [90m# (5 unchanged blocks hidden)[0m[0m
+    }
+
+[1m  # module.eks.aws_eks_cluster.this[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_eks_cluster" "this" {
+        id                            = "barterbrain-dev-eks"
+        name                          = "barterbrain-dev-eks"
+        tags                          = {
+            "Environment" = "dev"
+            "Name"        = "barterbrain-dev-eks"
+            "Project"     = "barterbrain"
+        }
+        [90m# (14 unchanged attributes hidden)[0m[0m
+
+      [33m~[0m[0m vpc_config {
+          [33m~[0m[0m public_access_cidrs       = [
+              [31m-[0m[0m "152.59.63.40/32",
+              [32m+[0m[0m "152.59.63.122/32",
+            ]
+            [90m# (7 unchanged attributes hidden)[0m[0m
+        }
+
+        [90m# (9 unchanged blocks hidden)[0m[0m
+    }
+
+[1mPlan:[0m [0m0 to add, 2 to change, 0 to destroy.
+[90m
+─────────────────────────────────────────────────────────────────────────────[0m
+
+Saved the plan to: dev.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "dev.tfplan"
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.cloudfront[0].aws_cloudfront_distribution.this[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_cloudfront_distribution" "this" {
+        id                              = "E39L3XPKA2E9BG"
+        tags                            = {
+            "Environment" = "dev"
+            "Name"        = "barterbrain-dev-cloudfront"
+            "Project"     = "barterbrain"
+            "Tier"        = "frontend"
+        }
+        [90m# (25 unchanged attributes hidden)[0m[0m
+
+      [33m~[0m[0m viewer_certificate {
+          [33m~[0m[0m minimum_protocol_version       = "TLSv1" [33m->[0m[0m "TLSv1.2_2021"
+            [90m# (4 unchanged attributes hidden)[0m[0m
+        }
+
+        [90m# (5 unchanged blocks hidden)[0m[0m
+    }
+
+[1m  # module.eks.aws_eks_cluster.this[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_eks_cluster" "this" {
+        id                            = "barterbrain-dev-eks"
+        name                          = "barterbrain-dev-eks"
+        tags                          = {
+            "Environment" = "dev"
+            "Name"        = "barterbrain-dev-eks"
+            "Project"     = "barterbrain"
+        }
+        [90m# (14 unchanged attributes hidden)[0m[0m
+
+      [33m~[0m[0m vpc_config {
+          [33m~[0m[0m public_access_cidrs       = [
+              [31m-[0m[0m "152.59.63.40/32",
+              [32m+[0m[0m "152.59.63.122/32",
+            ]
+            [90m# (7 unchanged attributes hidden)[0m[0m
+        }
+
+        [90m# (9 unchanged blocks hidden)[0m[0m
+    }
+
+[1mPlan:[0m [0m0 to add, 2 to change, 0 to destroy.
+Apply this infrastructure plan? Type yes: 
+========== Publish backend image ==========
+The push refers to repository [docker.io/aryanmore33/barterbrain-backend]
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Layer already exists
+bc2b57546290: Waiting
+44136fa355b3: Waiting
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+bc2b57546290: Waiting
+44136fa355b3: Already exists
+502142e2f202: Waiting
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+bc2b57546290: Waiting
+94faa6826e76: Waiting
+502142e2f202: Waiting
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+bc2b57546290: Waiting
+94faa6826e76: Waiting
+502142e2f202: Waiting
+55afa1ecc21d: Layer already exists
+b38a07ecd3ea: Layer already exists
+1bb667de680c: Waiting
+9d622ec54285: Waiting
+16260e8f37c0: Waiting
+bc2b57546290: Waiting
+94faa6826e76: Waiting
+502142e2f202: Layer already exists
+d93f70b89b9c: Waiting
+1bb667de680c: Waiting
+9d622ec54285: Waiting
+16260e8f37c0: Waiting
+94faa6826e76: Layer already exists
+d93f70b89b9c: Waiting
+1bb667de680c: Layer already exists
+9d622ec54285: Waiting
+16260e8f37c0: Waiting
+1fa31630afb9: Waiting
+1fa31630afb9: Waiting
+d93f70b89b9c: Layer already exists
+9d622ec54285: Layer already exists
+16260e8f37c0: Layer already exists
+1fa31630afb9: Layer already exists
+bc2b57546290: Pushed
+1.0.5: digest: sha256:a184cea82cf9c44794bda79a1a7c79fa4150b89a4b8d7aba826224ac41b991d6 size: 856
+
+========== Apply infrastructure ==========
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Modifying... [id=E39L3XPKA2E9BG][0m[0m
+[0m[1mmodule.eks.aws_eks_cluster.this: Modifying... [id=barterbrain-dev-eks][0m[0m
+[0m[1mmodule.eks.aws_eks_cluster.this: Still modifying... [id=barterbrain-dev-eks, 00m10s elapsed][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Still modifying... [id=E39L3XPKA2E9BG, 00m10s elapsed][0m[0m
+[0m[1mmodule.eks.aws_eks_cluster.this: Still modifying... [id=barterbrain-dev-eks, 00m20s elapsed][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Still modifying... [id=E39L3XPKA2E9BG, 00m20s elapsed][0m[0m
+[0m[1mmodule.eks.aws_eks_cluster.this: Modifications complete after 25s [id=barterbrain-dev-eks][0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Still modifying... [id=E39L3XPKA2E9BG, 00m30s elapsed][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Modifications complete after 34s [id=E39L3XPKA2E9BG][0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 2 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0maccount_id = "060245184105"
+alb_security_group_id = "sg-08113af14fbf3f4d0"
+aws_load_balancer_controller_role_arn = "arn:aws:iam::060245184105:role/barterbrain-dev-aws-load-balancer-controller"
+cloudfront_distribution_id = "E39L3XPKA2E9BG"
+cloudfront_domain_name = "d330mrc3h08bu7.cloudfront.net"
+database_subnet_ids = [
+  "subnet-0c70c2cfc6c1e455d",
+  "subnet-0ecd9cb34fdbcd3f3",
+]
+eks_cluster_arn = "arn:aws:eks:ap-south-1:060245184105:cluster/barterbrain-dev-eks"
+eks_cluster_endpoint = "https://CED0E15EE2115A48AD1A804E90EBD934.gr7.ap-south-1.eks.amazonaws.com"
+eks_cluster_name = "barterbrain-dev-eks"
+eks_cluster_role_arn = "arn:aws:iam::060245184105:role/barterbrain-dev-eks-cluster-role"
+eks_node_group_name = "barterbrain-dev-nodes"
+eks_node_role_arn = "arn:aws:iam::060245184105:role/barterbrain-dev-eks-node-role"
+eks_node_security_group_id = "sg-01892250e92211eae"
+frontend_bucket_arn = "arn:aws:s3:::barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e"
+frontend_bucket_name = "barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e"
+private_subnet_ids = [
+  "subnet-0a10d219df93c25ca",
+  "subnet-01b6581b62d62e851",
+]
+public_subnet_ids = [
+  "subnet-097e91eac6eefefd3",
+  "subnet-03eaccd955b129c26",
+]
+rds_database_name = "barterbrain"
+rds_endpoint = "barterbrain-dev-postgres.cpgu2u8eac01.ap-south-1.rds.amazonaws.com"
+rds_instance_id = "db-C2OKHZ64VCR63N2N7AXRQ3OCGE"
+rds_port = 5432
+rds_security_group_id = "sg-0ff570a6c0ef7dc67"
+vpc_id = "vpc-0d17c245abc27a3db"
+
+========== Read current Terraform outputs ==========
+
+========== Terraform outputs validated ==========
+RDS endpoint: barterbrain-dev-postgres.cpgu2u8eac01.ap-south-1.rds.amazonaws.com
+ALB security group: sg-08113af14fbf3f4d0
+CloudFront domain: d330mrc3h08bu7.cloudfront.net
+
+========== Wait for RDS and EKS ==========
+Updated context arn:aws:eks:ap-south-1:060245184105:cluster/barterbrain-dev-eks in /home/aryan/.kube/config
+node/ip-10-0-12-228.ap-south-1.compute.internal condition met
+
+========== Install AWS Load Balancer Controller ==========
+"eks" has been added to your repositories
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "eks" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Release "aws-load-balancer-controller" has been upgraded. Happy Helming!
+NAME: aws-load-balancer-controller
+LAST DEPLOYED: Thu Nov 12 14:49:44 2026
+NAMESPACE: kube-system
+STATUS: deployed
+REVISION: 7
+TEST SUITE: None
+NOTES:
+AWS Load Balancer controller installed!
+deployment "aws-load-balancer-controller" successfully rolled out
+
+========== Create namespace and apply rendered dev overlay ==========
+namespace/barterbrain-dev unchanged
+ERROR: ALB security group substitution failed.
+
+========== Verify AWS and Docker ==========
+
+========== Build backend image ==========
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from dockerfile
+#1 transferring dockerfile: 966B 0.0s done
+#1 DONE 0.0s
+
+#2 [auth] library/node:pull token for registry-1.docker.io
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:24.20.0-alpine3.24
+#3 DONE 1.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 154B 0.1s done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 ...
+
+#6 [dependencies 1/4] FROM docker.io/library/node:24.20.0-alpine3.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+#6 resolve docker.io/library/node:24.20.0-alpine3.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf 0.0s done
+#6 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 5.22kB 0.8s done
+#5 DONE 0.9s
+
+#7 [production 6/7] COPY --from=dependencies /server/node_modules ./node_modules
+#7 CACHED
+
+#8 [production 4/7] RUN apk update && apk upgrade
+#8 CACHED
+
+#9 [dependencies 2/4] WORKDIR /server
+#9 CACHED
+
+#10 [production 5/7] RUN rm -rf     /usr/local/lib/node_modules/npm     /usr/local/lib/node_modules/corepack     /usr/local/bin/npm     /usr/local/bin/npx     /usr/local/bin/corepack
+#10 CACHED
+
+#11 [dependencies 4/4] RUN npm ci --omit=dev
+#11 CACHED
+
+#12 [production 3/7] COPY rds-ca-bundle.pem /etc/ssl/certs/rds-ca-bundle.pem
+#12 CACHED
+
+#13 [dependencies 3/4] COPY package*.json ./
+#13 CACHED
+
+#14 [production 7/7] COPY . .
+#14 CACHED
+
+#15 exporting to image
+#15 exporting layers done
+#15 exporting manifest sha256:be90605f9ac60def432d512264faee76f05c34a939b27da56a3f23e794d217f5 done
+#15 exporting config sha256:28cce892535d389ee88bf24b905bff4f7d93ece26e5af453f5eb770550a2e76f done
+#15 exporting attestation manifest sha256:bd06213289905679c9a6140be1dad9d0d32a094f31cbacbea61cc67d4c773c3c 0.0s done
+#15 exporting manifest list sha256:7143a673afadcdd6ef72039329527fd0bb507badbed8cd53ece5acc0cb6be3af 0.0s done
+#15 naming to docker.io/aryanmore33/barterbrain-backend:1.0.5 done
+#15 unpacking to docker.io/aryanmore33/barterbrain-backend:1.0.5 0.0s done
+#15 DONE 0.1s
+
+========== Initialize Terraform ==========
+[0m[1mInitializing the backend...[0m
+
+[0m[1mInitializing modules...[0m
+
+[0m[1mInitializing provider plugins...[0m
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Reusing previous version of hashicorp/tls from the dependency lock file
+- Using previously-installed hashicorp/tls v4.4.1
+- Using previously-installed hashicorp/aws v6.63.0
+
+
+[0m[1m[32mTerraform has been successfully initialized![0m[32m[0m
+[0m[32m
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.[0m
+
+========== Create and review Terraform plan ==========
+[0m[1mmodule.cloudfront[0].aws_cloudfront_origin_access_control.this: Refreshing state... [id=EYVRHNPWBV6LY][0m
+[0m[1mmodule.s3.aws_s3_bucket.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.vpc.aws_eip.nat: Refreshing state... [id=eipalloc-0ed1402f568aa4d1b][0m
+[0m[1mmodule.iam-lbc.aws_iam_policy.aws_load_balancer_controller: Refreshing state... [id=arn:aws:iam::060245184105:policy/barterbrain-dev-AWSLoadBalancerControllerPolicy][0m
+[0m[1mmodule.iam-eks.aws_iam_role.eks_cluster: Refreshing state... [id=barterbrain-dev-eks-cluster-role][0m
+[0m[1mmodule.vpc.aws_vpc.this: Refreshing state... [id=vpc-0d17c245abc27a3db][0m
+[0m[1mmodule.iam-eks.aws_iam_role.eks_node: Refreshing state... [id=barterbrain-dev-eks-node-role][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=060245184105][0m
+[0m[1mmodule.vpc.aws_internet_gateway.this: Refreshing state... [id=igw-0bb5495182cfcda5c][0m
+[0m[1mmodule.vpc.aws_route_table.database: Refreshing state... [id=rtb-09112a09f4fa317a3][0m
+[0m[1mmodule.security_groups.aws_security_group.alb: Refreshing state... [id=sg-08113af14fbf3f4d0][0m
+[0m[1mmodule.security_groups.aws_security_group.rds: Refreshing state... [id=sg-0ff570a6c0ef7dc67][0m
+[0m[1mmodule.security_groups.aws_security_group.eks_node: Refreshing state... [id=sg-01892250e92211eae][0m
+[0m[1mmodule.vpc.aws_subnet.database[0]: Refreshing state... [id=subnet-0c70c2cfc6c1e455d][0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Refreshing state... [id=subnet-01b6581b62d62e851][0m
+[0m[1mmodule.vpc.aws_subnet.database[1]: Refreshing state... [id=subnet-0ecd9cb34fdbcd3f3][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0a10d219df93c25ca][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-03eaccd955b129c26][0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-097e91eac6eefefd3][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.alb_https: Refreshing state... [id=sgr-02501c943abed02e8][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_egress_rule.rds_all: Refreshing state... [id=sgr-09bb0c4a98f3d766c][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_egress_rule.alb_all: Refreshing state... [id=sgr-01d31a5ad13fb9c48][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.alb_http: Refreshing state... [id=sgr-0e5f88a3262cb847d][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.eks_node_self: Refreshing state... [id=sgr-0b2f3d26f32ef7952][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.eks_node_alb: Refreshing state... [id=sgr-026e25f9b9ac091a5][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_ingress_rule.rds_postgres: Refreshing state... [id=sgr-00d31ecf7794897a0][0m
+[0m[1mmodule.security_groups.aws_vpc_security_group_egress_rule.eks_node_all: Refreshing state... [id=sgr-098b6ec7c48e80961][0m
+[0m[1mmodule.vpc.aws_route_table.public: Refreshing state... [id=rtb-00f50f5364d756d34][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.s3.aws_s3_bucket_ownership_controls.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.vpc.aws_route_table_association.database[0]: Refreshing state... [id=rtbassoc-0fddf7d737c892a50][0m
+[0m[1mmodule.vpc.aws_route_table_association.database[1]: Refreshing state... [id=rtbassoc-0af8d33948a394166][0m
+[0m[1mmodule.vpc.aws_nat_gateway.this: Refreshing state... [id=nat-04dbfce4ebd65e241][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-0eab893dbab710fb7][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-0d4beb6caabb11678][0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Refreshing state... [id=E39L3XPKA2E9BG][0m
+[0m[1mmodule.rds.aws_db_subnet_group.this: Refreshing state... [id=barterbrain-dev-db-subnet-group][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_cluster: Refreshing state... [id=barterbrain-dev-eks-cluster-role/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_worker_node: Refreshing state... [id=barterbrain-dev-eks-node-role/arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_cni: Refreshing state... [id=barterbrain-dev-eks-node-role/arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy][0m
+[0m[1mmodule.iam-eks.aws_iam_role_policy_attachment.eks_ecr_pull: Refreshing state... [id=barterbrain-dev-eks-node-role/arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly][0m
+[0m[1mmodule.eks.aws_eks_cluster.this: Refreshing state... [id=barterbrain-dev-eks][0m
+[0m[1mmodule.vpc.aws_route_table.private: Refreshing state... [id=rtb-014ee9c8291d6ac89][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-06f0241deb67b297e][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-0de45323890235538][0m
+[0m[1mmodule.eks.aws_vpc_security_group_ingress_rule.eks_node_from_cluster_webhook: Refreshing state... [id=sgr-0275ad04816b45cc8][0m
+[0m[1mdata.tls_certificate.eks_oidc: Reading...[0m[0m
+[0m[1mmodule.eks.aws_launch_template.eks_node: Refreshing state... [id=lt-00bd5040696274cd5][0m
+[0m[1mmodule.rds.aws_db_instance.this: Refreshing state... [id=db-C2OKHZ64VCR63N2N7AXRQ3OCGE][0m
+[0m[1mmodule.cloudfront[0].aws_s3_bucket_policy.this: Refreshing state... [id=barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e][0m
+[0m[1mmodule.eks.aws_eks_node_group.this: Refreshing state... [id=barterbrain-dev-eks:barterbrain-dev-nodes][0m
+[0m[1mdata.tls_certificate.eks_oidc: Read complete after 0s [id=1e3a331631939a1ae4a625cd4244a4963dabbfa2][0m
+[0m[1maws_iam_openid_connect_provider.eks: Refreshing state... [id=arn:aws:iam::060245184105:oidc-provider/oidc.eks.ap-south-1.amazonaws.com/id/CED0E15EE2115A48AD1A804E90EBD934][0m
+[0m[1mmodule.iam-lbc.data.aws_iam_policy_document.aws_load_balancer_controller_assume_role: Reading...[0m[0m
+[0m[1mmodule.iam-lbc.data.aws_iam_policy_document.aws_load_balancer_controller_assume_role: Read complete after 0s [id=555438857][0m
+[0m[1mmodule.iam-lbc.aws_iam_role.aws_load_balancer_controller: Refreshing state... [id=barterbrain-dev-aws-load-balancer-controller][0m
+[0m[1mmodule.iam-lbc.aws_iam_role_policy_attachment.aws_load_balancer_controller: Refreshing state... [id=barterbrain-dev-aws-load-balancer-controller/arn:aws:iam::060245184105:policy/barterbrain-dev-AWSLoadBalancerControllerPolicy][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.cloudfront[0].aws_cloudfront_distribution.this[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_cloudfront_distribution" "this" {
+        id                              = "E39L3XPKA2E9BG"
+        tags                            = {
+            "Environment" = "dev"
+            "Name"        = "barterbrain-dev-cloudfront"
+            "Project"     = "barterbrain"
+            "Tier"        = "frontend"
+        }
+        [90m# (25 unchanged attributes hidden)[0m[0m
+
+      [33m~[0m[0m viewer_certificate {
+          [33m~[0m[0m minimum_protocol_version       = "TLSv1" [33m->[0m[0m "TLSv1.2_2021"
+            [90m# (4 unchanged attributes hidden)[0m[0m
+        }
+
+        [90m# (5 unchanged blocks hidden)[0m[0m
+    }
+
+[1mPlan:[0m [0m0 to add, 1 to change, 0 to destroy.
+[90m
+─────────────────────────────────────────────────────────────────────────────[0m
+
+Saved the plan to: dev.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "dev.tfplan"
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.cloudfront[0].aws_cloudfront_distribution.this[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_cloudfront_distribution" "this" {
+        id                              = "E39L3XPKA2E9BG"
+        tags                            = {
+            "Environment" = "dev"
+            "Name"        = "barterbrain-dev-cloudfront"
+            "Project"     = "barterbrain"
+            "Tier"        = "frontend"
+        }
+        [90m# (25 unchanged attributes hidden)[0m[0m
+
+      [33m~[0m[0m viewer_certificate {
+          [33m~[0m[0m minimum_protocol_version       = "TLSv1" [33m->[0m[0m "TLSv1.2_2021"
+            [90m# (4 unchanged attributes hidden)[0m[0m
+        }
+
+        [90m# (5 unchanged blocks hidden)[0m[0m
+    }
+
+[1mPlan:[0m [0m0 to add, 1 to change, 0 to destroy.
+Apply this infrastructure plan? Type yes: 
+========== Publish backend image ==========
+The push refers to repository [docker.io/aryanmore33/barterbrain-backend]
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+a0f82f71477f: Waiting
+55afa1ecc21d: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+a0f82f71477f: Layer already exists
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+502142e2f202: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+55afa1ecc21d: Waiting
+b38a07ecd3ea: Waiting
+502142e2f202: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+b38a07ecd3ea: Waiting
+502142e2f202: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Waiting
+55afa1ecc21d: Waiting
+55afa1ecc21d: Layer already exists
+b38a07ecd3ea: Waiting
+502142e2f202: Waiting
+1bb667de680c: Waiting
+fe26be15f2dc: Waiting
+44136fa355b3: Already exists
+94faa6826e76: Waiting
+502142e2f202: Waiting
+1bb667de680c: Waiting
+fe26be15f2dc: Waiting
+94faa6826e76: Waiting
+b38a07ecd3ea: Waiting
+b38a07ecd3ea: Waiting
+502142e2f202: Waiting
+1bb667de680c: Waiting
+fe26be15f2dc: Waiting
+94faa6826e76: Waiting
+fe26be15f2dc: Waiting
+94faa6826e76: Layer already exists
+16260e8f37c0: Waiting
+502142e2f202: Layer already exists
+d93f70b89b9c: Waiting
+1fa31630afb9: Waiting
+9d622ec54285: Waiting
+b38a07ecd3ea: Layer already exists
+1bb667de680c: Layer already exists
+9d622ec54285: Waiting
+fe26be15f2dc: Waiting
+16260e8f37c0: Waiting
+d93f70b89b9c: Waiting
+1fa31630afb9: Waiting
+fe26be15f2dc: Waiting
+16260e8f37c0: Layer already exists
+d93f70b89b9c: Layer already exists
+1fa31630afb9: Waiting
+9d622ec54285: Layer already exists
+1fa31630afb9: Layer already exists
+fe26be15f2dc: Pushed
+1.0.5: digest: sha256:7143a673afadcdd6ef72039329527fd0bb507badbed8cd53ece5acc0cb6be3af size: 856
+
+========== Apply infrastructure ==========
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Modifying... [id=E39L3XPKA2E9BG][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Still modifying... [id=E39L3XPKA2E9BG, 00m10s elapsed][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Still modifying... [id=E39L3XPKA2E9BG, 00m20s elapsed][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Still modifying... [id=E39L3XPKA2E9BG, 00m32s elapsed][0m[0m
+[0m[1mmodule.cloudfront[0].aws_cloudfront_distribution.this: Modifications complete after 35s [id=E39L3XPKA2E9BG][0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0maccount_id = "060245184105"
+alb_security_group_id = "sg-08113af14fbf3f4d0"
+aws_load_balancer_controller_role_arn = "arn:aws:iam::060245184105:role/barterbrain-dev-aws-load-balancer-controller"
+cloudfront_distribution_id = "E39L3XPKA2E9BG"
+cloudfront_domain_name = "d330mrc3h08bu7.cloudfront.net"
+database_subnet_ids = [
+  "subnet-0c70c2cfc6c1e455d",
+  "subnet-0ecd9cb34fdbcd3f3",
+]
+eks_cluster_arn = "arn:aws:eks:ap-south-1:060245184105:cluster/barterbrain-dev-eks"
+eks_cluster_endpoint = "https://CED0E15EE2115A48AD1A804E90EBD934.gr7.ap-south-1.eks.amazonaws.com"
+eks_cluster_name = "barterbrain-dev-eks"
+eks_cluster_role_arn = "arn:aws:iam::060245184105:role/barterbrain-dev-eks-cluster-role"
+eks_node_group_name = "barterbrain-dev-nodes"
+eks_node_role_arn = "arn:aws:iam::060245184105:role/barterbrain-dev-eks-node-role"
+eks_node_security_group_id = "sg-01892250e92211eae"
+frontend_bucket_arn = "arn:aws:s3:::barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e"
+frontend_bucket_name = "barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e"
+private_subnet_ids = [
+  "subnet-0a10d219df93c25ca",
+  "subnet-01b6581b62d62e851",
+]
+public_subnet_ids = [
+  "subnet-097e91eac6eefefd3",
+  "subnet-03eaccd955b129c26",
+]
+rds_database_name = "barterbrain"
+rds_endpoint = "barterbrain-dev-postgres.cpgu2u8eac01.ap-south-1.rds.amazonaws.com"
+rds_instance_id = "db-C2OKHZ64VCR63N2N7AXRQ3OCGE"
+rds_port = 5432
+rds_security_group_id = "sg-0ff570a6c0ef7dc67"
+vpc_id = "vpc-0d17c245abc27a3db"
+
+========== Read current Terraform outputs ==========
+
+========== Terraform outputs validated ==========
+RDS endpoint: barterbrain-dev-postgres.cpgu2u8eac01.ap-south-1.rds.amazonaws.com
+ALB security group: sg-08113af14fbf3f4d0
+CloudFront domain: d330mrc3h08bu7.cloudfront.net
+
+========== Wait for RDS and EKS ==========
+Updated context arn:aws:eks:ap-south-1:060245184105:cluster/barterbrain-dev-eks in /home/aryan/.kube/config
+node/ip-10-0-12-228.ap-south-1.compute.internal condition met
+
+========== Install AWS Load Balancer Controller ==========
+"eks" has been added to your repositories
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "eks" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Release "aws-load-balancer-controller" has been upgraded. Happy Helming!
+NAME: aws-load-balancer-controller
+LAST DEPLOYED: Thu Nov 12 14:56:53 2026
+NAMESPACE: kube-system
+STATUS: deployed
+REVISION: 8
+TEST SUITE: None
+NOTES:
+AWS Load Balancer controller installed!
+deployment "aws-load-balancer-controller" successfully rolled out
+
+========== Create namespace and apply rendered dev overlay ==========
+namespace/barterbrain-dev unchanged
+namespace/barterbrain-dev unchanged
+configmap/barterbrain-backend-config unchanged
+secret/barterbrain-backend-secret configured
+secret/barterbrain-rds-credentials configured
+secret/neon-to-rds-migration configured
+service/barterbrain-backend-service unchanged
+service/barterbrain-redis unchanged
+deployment.apps/barterbrain-backend unchanged
+deployment.apps/barterbrain-redis unchanged
+job.batch/neon-to-rds-migration unchanged
+ingress.networking.k8s.io/barterbrain-backend-ingress unchanged
+
+========== Wait for Redis ==========
+deployment "barterbrain-redis" successfully rolled out
+
+========== Check RDS connectivity ==========
+job.batch/rds-connectivity-check created
+job.batch/rds-connectivity-check condition met
+========== RDS CONNECTION CHECK ==========
+========== DATABASE VERSION ==========
+ current_database |   current_user    | current_setting 
+------------------+-------------------+-----------------
+ barterbrain      | barterbrain_admin | 17.9
+(1 row)
+
+========== DATABASE SIZE ==========
+ database_size 
+---------------
+ 8918 kB
+(1 row)
+
+========== APPLICATION SCHEMAS ==========
+     schema_name      
+----------------------
+ barterbrain_internal
+ public
+(2 rows)
+
+========== EXISTING TABLES ==========
+      schemaname      |      tablename       
+----------------------+----------------------
+ barterbrain_internal | bootstrap_status
+ public               | barter_requests
+ public               | call_logs
+ public               | call_participants
+ public               | calls
+ public               | chat_keys
+ public               | credit_transactions
+ public               | knex_migrations
+ public               | knex_migrations_lock
+ public               | message_attachments
+ public               | message_receipts
+ public               | messages
+ public               | reviews
+ public               | skills
+ public               | user_keys
+ public               | user_offered_skills
+ public               | user_presence
+ public               | user_wanted_skills
+ public               | users
+(19 rows)
+
+========== PUBLIC TABLE COUNT ==========
+ existing_application_tables 
+-----------------------------
+                          18
+(1 row)
+
+========== RDS CHECK COMPLETED ==========
+
+========== Wait for Neon-to-RDS restore ==========
+job.batch/neon-to-rds-migration condition met
+======================================
+ NEON TO RDS MIGRATION
+======================================
+
+STEP 1: Checking PostgreSQL client
+pg_dump (PostgreSQL) 17.11
+pg_restore (PostgreSQL) 17.11
+
+STEP 2: Checking source database
+Source application tables: 18
+
+STEP 3: Checking destination database
+Existing RDS application tables: 0
+RDS is empty. Proceeding with fresh Neon restore.
+
+STEP 4: Creating Neon backup
+Backup created successfully.
+
+STEP 5: Validating backup archive
+Backup size: 48.0K
+Archive validation successful.
+
+STEP 6: Restoring into RDS
+
+STEP 7: Checking restored tables
+Restored application tables: 18
+
+STEP 8: Comparing row counts table by table
+barter_requests: source=1 target=1
+call_logs: source=20 target=20
+call_participants: source=2 target=2
+calls: source=1 target=1
+chat_keys: source=1 target=1
+credit_transactions: source=0 target=0
+knex_migrations: source=25 target=25
+knex_migrations_lock: source=1 target=1
+message_attachments: source=0 target=0
+message_receipts: source=4 target=4
+messages: source=2 target=2
+reviews: source=0 target=0
+skills: source=6 target=6
+user_keys: source=2 target=2
+user_offered_skills: source=2 target=2
+user_presence: source=2 target=2
+user_wanted_skills: source=2 target=2
+users: source=2 target=2
+CREATE SCHEMA
+CREATE TABLE
+INSERT 0 1
+
+======================================
+ DATABASE RESTORE COMPLETED
+======================================
+Source tables: 18
+Destination tables: 18
+Neon database remains unchanged.
+
+========== Wait for backend ==========
+deployment "barterbrain-backend" successfully rolled out
+
+========== Build frontend ==========
+npm warn deprecated whatwg-encoding@2.0.0: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+npm warn deprecated domexception@4.0.0: Use your platform's native DOMException instead
+
+added 506 packages, and audited 507 packages in 43s
+
+99 packages are looking for funding
+  run `npm fund` for details
+
+33 vulnerabilities (1 low, 8 moderate, 22 high, 2 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> vite_react_shadcn_ts@0.0.0 build
+> vite build
+
+[36mvite v5.4.19 [32mbuilding for production...[36m[39m
+transforming...
+Browserslist: browsers data (caniuse-lite) is 17 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[32m✓[39m 1803 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m  1.26 kB[22m[1m[22m[2m │ gzip:   0.53 kB[22m
+[2mdist/[22m[35massets/index-BKW6Tv5K.css  [39m[1m[2m 71.05 kB[22m[1m[22m[2m │ gzip:  12.49 kB[22m
+[2mdist/[22m[36massets/index-CnlmaD6O.js   [39m[1m[2m492.95 kB[22m[1m[22m[2m │ gzip: 153.41 kB[22m
+[32m✓ built in 8.56s[39m
+
+========== Publish frontend to S3 ==========
+Completed 69.4 KiB/612.4 KiB (325.5 KiB/s) with 6 file(s) remainingupload: application/client/dist/assets/index-BKW6Tv5K.css to s3://barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e/assets/index-BKW6Tv5K.css
+Completed 69.4 KiB/612.4 KiB (325.5 KiB/s) with 5 file(s) remainingCompleted 550.8 KiB/612.4 KiB (2.3 MiB/s) with 5 file(s) remaining Completed 552.0 KiB/612.4 KiB (1.7 MiB/s) with 5 file(s) remaining upload: application/client/dist/index.html to s3://barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e/index.html
+Completed 552.0 KiB/612.4 KiB (1.7 MiB/s) with 4 file(s) remainingCompleted 552.2 KiB/612.4 KiB (1.6 MiB/s) with 4 file(s) remainingupload: application/client/dist/robots.txt to s3://barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e/robots.txt
+Completed 552.2 KiB/612.4 KiB (1.6 MiB/s) with 3 file(s) remainingCompleted 580.2 KiB/612.4 KiB (1.5 MiB/s) with 3 file(s) remainingCompleted 612.4 KiB/612.4 KiB (1.5 MiB/s) with 3 file(s) remainingupload: application/client/dist/placeholder.svg to s3://barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e/placeholder.svg
+Completed 612.4 KiB/612.4 KiB (1.5 MiB/s) with 2 file(s) remainingupload: application/client/dist/favicon.ico to s3://barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e/favicon.ico
+Completed 612.4 KiB/612.4 KiB (1.5 MiB/s) with 1 file(s) remainingupload: application/client/dist/assets/index-CnlmaD6O.js to s3://barterbrain-dev-frontend1813aa7c961d9089de37ec7d7e/assets/index-CnlmaD6O.js
+
+========== Invalidate CloudFront cache ==========
+
+========== Deployment completed ==========
+EKS: barterbrain-dev-eks
+RDS: barterbrain-dev-postgres.cpgu2u8eac01.ap-south-1.rds.amazonaws.com
+ALB security group: sg-08113af14fbf3f4d0
+Frontend: https://d330mrc3h08bu7.cloudfront.net
+Backend: deployed in Kubernetes
+Ingress: applied with HTTP listener
+NAME                                   READY   STATUS      RESTARTS   AGE
+barterbrain-backend-5dbcbf4667-lp295   1/1     Running     0          96m
+barterbrain-redis-86474df6f-vttwn      1/1     Running     0          152m
+neon-to-rds-migration-vvsw2            0/1     Completed   0          152m
+rds-connectivity-check-gnc82           0/1     Completed   0          69s
+NAME                     STATUS     COMPLETIONS   DURATION   AGE
+neon-to-rds-migration    Complete   1/1           18m        152m
+rds-connectivity-check   Complete   1/1           3s         71s
+NAME                          CLASS   HOSTS   ADDRESS                                                                    PORTS   AGE
+barterbrain-backend-ingress   alb     *       k8s-barterbr-barterbr-739a133ccd-1250292094.ap-south-1.elb.amazonaws.com   80      152m

@@ -8,6 +8,8 @@ metadata:
     project: barterbrain
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
 
   selector:
     matchLabels:
@@ -20,13 +22,96 @@ spec:
         project: barterbrain
 
     spec:
+      initContainers:
+        - name: wait-for-redis
+          image: redis:7.4-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until [ "$(redis-cli -h barterbrain-redis -p 6379 ping 2>/dev/null || true)" = "PONG" ]; do
+                echo "Waiting for in-cluster Redis..."
+                sleep 3
+              done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+
+        - name: wait-for-rds-restore
+          image: postgres:17-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                BOOTSTRAP_READY="$(psql -X -A -t -v ON_ERROR_STOP=1 -c \
+                  "SELECT to_regclass('barterbrain_internal.bootstrap_status') IS NOT NULL" 2>/dev/null || true)"
+                if [ "$BOOTSTRAP_READY" = "t" ]; then
+                  echo "Neon restore is verified in RDS."
+                  exit 0
+                fi
+                echo "Waiting for the Neon-to-RDS Job to verify the restore..."
+                sleep 5
+              done
+          env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGHOST
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGDATABASE
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGUSER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: barterbrain-rds-credentials
+                  key: PGPASSWORD
+            - name: PGSSLMODE
+              value: "require"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+
+        - name: run-knex-migrations
+          image: IMAGE_URI
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - ./node_modules/.bin/knex migrate:latest --knexfile knexfile.js
+          envFrom:
+            - configMapRef:
+                name: barterbrain-backend-config
+            - secretRef:
+                name: barterbrain-backend-secret
+
       containers:
         - name: backend
           image: IMAGE_URI
           imagePullPolicy: IfNotPresent
 
           ports:
-            - containerPort: 3000
+            - name: http
+              containerPort: 3000
               protocol: TCP
 
           envFrom:

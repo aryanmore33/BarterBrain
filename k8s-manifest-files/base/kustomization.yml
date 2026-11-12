@@ -3,8 +3,10 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - configmap.yaml
-  - secret.yaml
-  - migration-job.yaml
+  - configmap.yml
+  - neon-to-rds
   - backend.yaml
-  - ingress.yaml
+  - ingress.yml
+  - redis.yml
+  - rds-secret.yml
+  - secret.yaml

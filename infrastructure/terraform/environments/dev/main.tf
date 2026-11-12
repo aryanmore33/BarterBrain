@@ -8,12 +8,10 @@ module "vpc" {
   vpc_cidr           = var.vpc_cidr
 }
 
-module "iam" {
-  source       = "../../modules/iam"
+module "iam-eks" {
+  source       = "../../modules/iam-eks"
   project_name = var.project_name
   environment  = var.environment
-  oidc_provider_arn = aws_iam_openid_connect_provider.eks.arn
-  oidc_issuer_url   = module.eks.oidc_issuer_url
 }
 
 module "eks" {
@@ -28,9 +26,10 @@ module "eks" {
   node_desired_size = var.node_desired_size
   node_min_size = var.node_min_size
   node_max_size = var.node_max_size
-  cluster_role_arn = module.iam.eks_cluster_role_arn
-  node_role_arn = module.iam.eks_node_role_arn
+  cluster_role_arn = module.iam-eks.eks_cluster_role_arn
+  node_role_arn = module.iam-eks.eks_node_role_arn
   node_security_group_id = module.security_groups.eks_node_security_group_id
+  public_access_cidrs = var.eks_public_access_cidrs
 }
 
 module "security_groups" {
@@ -53,17 +52,6 @@ module "rds" {
   engine_version = "17"
   instance_class = "db.t3.micro"
   allocated_storage = 20
-}
-
-module "elasticache" {
-  source = "../../modules/elasticache"
-  project_name = var.project_name
-  environment = var.environment
-  subnet_ids = module.vpc.database_subnet_ids
-  security_group_id = module.security_groups.redis_security_group_id
-  node_type = var.redis_node_type
-  engine_version = var.redis_engine_version
-  auth_token = var.redis_auth_token
 }
 
 module "s3" {
@@ -96,4 +84,11 @@ resource "aws_iam_openid_connect_provider" "eks" {
     Project     = var.project_name
     Environment = var.environment
   }
+}
+module "iam-lbc" {
+  source = "../../modules/iam-lbc"
+  project_name      = var.project_name
+  environment       = var.environment
+  oidc_provider_arn = aws_iam_openid_connect_provider.eks.arn
+  oidc_issuer_url   = module.eks.oidc_issuer_url
 }

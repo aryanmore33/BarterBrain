@@ -42,3 +42,7 @@ variable "node_role_arn" {
 variable "node_security_group_id" {
   type = string
 }
+
+variable "public_access_cidrs" {
+  type = list(string)
+}

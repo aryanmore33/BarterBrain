@@ -9,7 +9,13 @@ resources:
 images:
   - name: IMAGE_URI
     newName: aryanmore33/barterbrain-backend
-    newTag: "1.0.4"
+    newTag: "1.0.5"
 
 patches:
-  - path: patch.yaml
+  # - path: patch.yml
+  - path: ingress-patch.yml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: barterbrain-backend-ingress

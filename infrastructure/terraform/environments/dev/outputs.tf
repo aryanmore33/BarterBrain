@@ -17,10 +17,10 @@ output "database_subnet_ids" {
 }
 
 output "eks_cluster_role_arn" {
-  value = module.iam.eks_cluster_role_arn
+  value = module.iam-eks.eks_cluster_role_arn
 }
 output "eks_node_role_arn" {
-  value = module.iam.eks_node_role_arn  
+  value = module.iam-eks.eks_node_role_arn  
 }
 output "eks_cluster_name" {
   value = module.eks.cluster_name
@@ -34,10 +34,9 @@ output "eks_cluster_endpoint" {
 output "eks_node_group_name" {
   value = module.eks.node_group_name
 }
-# output "aws_load_balancer_controller_role_arn" {
-#   value = module.iam.aws_load_balancer_controller_role_arn
-# }
-
+output "aws_load_balancer_controller_role_arn" {
+  value = module.iam-lbc.aws_load_balancer_controller_role_arn
+}
 output "alb_security_group_id" {
   value = module.security_groups.alb_security_group_id
 }
@@ -47,10 +46,6 @@ output "eks_node_security_group_id" {
 output "rds_security_group_id" {
   value = module.security_groups.rds_security_group_id
 }
-output "redis_security_group_id" {
-  value = module.security_groups.redis_security_group_id
-}
-
 
 output "rds_instance_id" {
   value = module.rds.db_instance_id
@@ -63,19 +58,6 @@ output "rds_port" {
 }
 output "rds_database_name" {
   value = module.rds.db_name
-}
-
-output "redis_replication_group_id" {
-  description = "ElastiCache Redis replication group ID"
-  value = module.elasticache.redis_replication_group_id
-}
-output "redis_primary_endpoint" {
-  description = "ElastiCache Redis primary endpoint"
-  value = module.elasticache.redis_primary_endpoint
-}
-output "redis_port" {
-  description = "ElastiCache Redis port"
-  value = module.elasticache.redis_port
 }
 
 output "frontend_bucket_name" {
